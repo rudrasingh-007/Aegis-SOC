@@ -1,5 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
-
+from notifier.email_notifier import notify_critical_alerts
 from simulator.alert_simulator import generate_alerts
 from engine.rule_engine import process_alerts
 from enrichment.threat_intel import enrich_alerts
@@ -21,6 +21,9 @@ def main():
 	alerts = enrich_alerts(alerts)
 	print("[Aegis-SOC] Threat intel enrichment is done.")
 
+	notify_critical_alerts(alerts)
+	print("[Aegis-SOC] Critical alert notifications sent.")
+	
 	generate_reports(alerts)
 	print("[Aegis-SOC] Pipeline complete.")
 

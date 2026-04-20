@@ -6,6 +6,9 @@ load_dotenv()
 
 ABUSEIPDB_API_KEY = os.getenv("ABUSEIPDB_API_KEY")
 ABUSEIPDB_URL = "https://api.abuseipdb.com/api/v2/check"
+EMAIL_SENDER = os.getenv("EMAIL_SENDER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 
 LOW = "LOW"
 MEDIUM = "MEDIUM"
