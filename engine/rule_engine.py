@@ -32,6 +32,21 @@ def classify_alert(alert):
 	if alert_type == "suspicious_connection":
 		return MEDIUM
 
+	if alert_type == "ransomware_detected":
+		return CRITICAL
+
+	if alert_type == "ddos_attack":
+		return HIGH
+
+	if alert_type == "privilege_escalation":
+		return HIGH
+
+	if alert_type == "unauthorized_wifi_access":
+		return MEDIUM
+
+	if alert_type == "dns_tunneling":
+		return MEDIUM
+
 	if attempt_count < 3:
 		return LOW
 

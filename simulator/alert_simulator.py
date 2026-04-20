@@ -19,6 +19,11 @@ ALERT_TYPES = [
 	"malware_detected",
 	"suspicious_connection",
 	"brute_force",
+	"unauthorized_wifi_access",
+	"ransomware_detected",
+	"privilege_escalation",
+	"ddos_attack",
+	"dns_tunneling",
 ]
 
 TARGET_SYSTEMS = [
