@@ -40,6 +40,10 @@ def generate_report(alert):
 	print(f"Severity: {alert.get('severity', 'N/A')}")
 	if "abuse_score" in alert:
 		print(f"Abuse Score: {alert.get('abuse_score')}")
+
+	if "virustotal_score" in alert:
+		print(f"VirusTotal Score: {alert.get('virustotal_score')}")	
+
 	if "threat_confirmed" in alert:
 		print(f"Threat Confirmed: {alert.get('threat_confirmed')}")
 	print(f"Recommended Action: {report['recommended_action']}")
