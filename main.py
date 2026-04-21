@@ -1,4 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
+from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
 from simulator.alert_simulator import generate_alerts
 from engine.rule_engine import process_alerts
@@ -25,6 +26,7 @@ def main():
 	print("[Aegis-SOC] Critical alert notifications sent.")
 	
 	generate_reports(alerts)
+	log_false_positives(alerts)
 	print("[Aegis-SOC] Pipeline complete.")
 
 
