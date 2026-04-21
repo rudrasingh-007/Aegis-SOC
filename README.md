@@ -45,6 +45,8 @@ Alert Simulator → Rule Engine → Threat Intel Enrichment → Email Notifier �
 ---
 
 ## 📁 Project Structure
+
+```
 Aegis-SOC/
 │
 ├── main.py                        # Entry point
@@ -65,8 +67,7 @@ Aegis-SOC/
 ├── reports/                       # Generated JSON reports
 ├── requirements.txt               # Dependencies
 └── README.md                      # Documentation
-
----
+```
 
 ## ⚙️ Setup
 
