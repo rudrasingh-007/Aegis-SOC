@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 logs/
 l2_reports/
+correlation_reports/
