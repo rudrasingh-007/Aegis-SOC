@@ -1,4 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
+from playbooks.response_playbooks import run_playbooks
 from integrations.wazuh_ingestor import generate_sample_wazuh_alerts, load_wazuh_alerts_from_file
 from correlator.alert_correlator import correlate_alerts
 from l2_investigator.l2_engine import run_l2_investigation
@@ -42,6 +43,9 @@ def main():
 
 	run_l2_investigation(alerts)
 	print("[Aegis-SOC] L2 investigations complete.")
+
+	run_playbooks(alerts)
+	print("[Aegis-SOC] Response playbooks executed.")
 
 	log_false_positives(alerts)
 	print("[Aegis-SOC] Pipeline complete.")
