@@ -53,62 +53,23 @@ Built by a cybersecurity aspirant as a serious contribution to the SOC automatio
 ```
 
 ## PIPELINE ARCHITECTURE
-┌─────────────────────────────────────────────────────────────────┐
-│                        AEGIS-SOC PIPELINE                        │
-└─────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────┐     ┌─────────────────┐
-│  ALERT SIMULATOR │────▶│   WAZUH INGESTOR │
-│  10 attack types │     │  SIEM compatible │
-└────────┬────────┘     └────────┬────────┘
-         └──────────┬────────────┘
-                    ▼
-         ┌─────────────────┐
-         │   RULE ENGINE    │
-         │ LOW/MED/HIGH/CRIT│
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │  THREAT INTEL    │
-         │AbuseIPDB+VT APIs │
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │ ANOMALY DETECTOR │
-         │  Z-score based   │
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │   CORRELATOR     │
-         │ Multi-vector det.│
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │ EMAIL NOTIFIER   │
-         │ CRITICAL alerts  │
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │ REPORT GENERATOR │
-         │  JSON + Console  │
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │  L2 INVESTIGATOR │
-         │ Impact + Timeline│
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │    PLAYBOOKS     │
-         │ Response steps   │
-         └────────┬────────┘
-                    ▼
-         ┌─────────────────┐
-         │   FP LOGGER      │
-         │ False pos. track │
-         └─────────────────┘
 ```
+INPUT LAYER
+  ├── Alert Simulator      →  10 attack vectors, synthetic alerts
+  └── Wazuh Ingestor       →  SIEM compatible ingestion
+
+PROCESSING LAYER
+  ├── Rule Engine          →  Severity classification (LOW/MED/HIGH/CRIT)
+  ├── Threat Intel         →  AbuseIPDB + VirusTotal enrichment
+  ├── Anomaly Detector     →  Z-score statistical analysis
+  └── Alert Correlator     →  Multi-vector attack grouping
+
+OUTPUT LAYER
+  ├── Email Notifier       →  CRITICAL alert dispatch
+  ├── Report Generator     →  JSON + Console incident reports
+  ├── L2 Investigator      →  Impact assessment + isolation rec.
+  ├── Response Playbooks   →  Step-by-step incident response
+  └── FP Logger            →  False positive registry
 
 ```
 | Stage | Module | Function |
