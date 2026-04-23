@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1741012345.1001",
+    "timestamp": "2026-04-23T08:12:31Z",
+    "rule": {
+      "level": 6,
+      "description": "Multiple failed logins detected"
+    },
+    "agent": {
+      "id": "001",
+      "name": "web-server-01",
+      "ip": "203.0.113.24"
+    },
+    "manager": {
+      "name": "wazuh-manager-1"
+    }
+  },
+  {
+    "id": "1741012388.1002",
+    "timestamp": "2026-04-23T08:13:14Z",
+    "rule": {
+      "level": 10,
+      "description": "Port scan activity from external source"
+    },
+    "agent": {
+      "id": "002",
+      "name": "firewall-gateway",
+      "ip": "198.51.100.77"
+    },
+    "manager": {
+      "name": "wazuh-manager-1"
+    }
+  },
+  {
+    "id": "1741012459.1003",
+    "timestamp": "2026-04-23T08:14:29Z",
+    "rule": {
+      "level": 14,
+      "description": "Ransomware behavior detected on endpoint"
+    },
+    "agent": {
+      "id": "003",
+      "name": "finance-workstation-07",
+      "ip": "192.0.2.56"
+    },
+    "manager": {
+      "name": "wazuh-manager-1"
+    }
+  }
+]
