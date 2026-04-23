@@ -1,4 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
+from anomaly.anomaly_detector import run_anomaly_detection
 from playbooks.response_playbooks import run_playbooks
 from integrations.wazuh_ingestor import generate_sample_wazuh_alerts, load_wazuh_alerts_from_file
 from correlator.alert_correlator import correlate_alerts
@@ -32,6 +33,9 @@ def main():
 
 	alerts = enrich_alerts(alerts)
 	print("[Aegis-SOC] Threat intel enrichment is done.")
+
+	alerts = run_anomaly_detection(alerts)
+	print("[Aegis-SOC] Anomaly detection complete.")
 
 	correlate_alerts(alerts)
 	print("[Aegis-SOC] Alert correlation complete.")

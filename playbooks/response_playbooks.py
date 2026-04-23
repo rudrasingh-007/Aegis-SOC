@@ -65,6 +65,18 @@ PLAYBOOKS = {
 			"6. Conduct a threat hunt for additional tunnel activity.",
 		],
 	},
+	"brute_force": {
+		"name": "Brute Force Attack Containment",
+		"description": "Contain repeated authentication attacks and prevent account compromise.",
+		"steps": [
+			"1. Block the source IP at firewall and access control layers.",
+			"2. Lock targeted user accounts pending verification.",
+			"3. Review authentication logs for attack scope and patterns.",
+			"4. Enable or tighten account lockout policy thresholds.",
+			"5. Add the attacking IP to persistent blocklists.",
+			"6. Monitor closely for further brute force attempts.",
+		],
+	},
 }
 
 
