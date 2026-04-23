@@ -1,6 +1,8 @@
 """Flask dashboard server for Aegis-SOC."""
 
-from flask import Flask, render_template, jsonify
+from itertools import count
+
+from flask import Flask, render_template, jsonify, request
 
 from simulator.alert_simulator import generate_alerts
 from engine.rule_engine import process_alerts
@@ -29,7 +31,9 @@ def index():
 @app.route("/run-pipeline", methods=["POST"])
 def run_pipeline():
 	"""Run the end-to-end Aegis-SOC pipeline and return JSON results."""
-	alerts = generate_alerts(5)
+	data = request.get_json(silent=True) or {}
+	count = int(data.get("count", 5))
+	alerts = generate_alerts(count)
 	alerts = process_alerts(alerts)
 	alerts = enrich_alerts(alerts)
 	alerts = run_anomaly_detection(alerts)
