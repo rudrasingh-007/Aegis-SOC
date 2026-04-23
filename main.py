@@ -1,4 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
+from correlator.alert_correlator import correlate_alerts
 from l2_investigator.l2_engine import run_l2_investigation
 from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
@@ -22,6 +23,9 @@ def main():
 
 	alerts = enrich_alerts(alerts)
 	print("[Aegis-SOC] Threat intel enrichment is done.")
+	
+	correlate_alerts(alerts)
+	print("[Aegis-SOC] Alert correlation complete.")
 
 	notify_critical_alerts(alerts)
 	print("[Aegis-SOC] Critical alert notifications sent.")
@@ -30,7 +34,7 @@ def main():
 
 	run_l2_investigation(alerts)
 	print("[Aegis-SOC] L2 investigations complete.")
-	
+
 	log_false_positives(alerts)
 	print("[Aegis-SOC] Pipeline complete.")
 
