@@ -23,7 +23,9 @@ Aegis-SOC is a modular, open source cybersecurity automation tool built to elimi
 Built by a cybersecurity aspirant as a serious contribution to the SOC automation space.
 
 ---
+## DASHBOARD PREVIEW
 
+![Aegis-SOC Dashboard](assets/dashboard_preview.png)
 ---
 
 ## FEATURES
