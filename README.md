@@ -50,9 +50,9 @@ Built by a cybersecurity aspirant as a serious contribution to the SOC automatio
 ```
 [SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [ANOMALY DETECTOR] → [CORRELATOR] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [PLAYBOOKS] → [FP LOGGER]
 
-## PIPELINE ARCHITECTURE
-
 ```
+
+## PIPELINE ARCHITECTURE
 ┌─────────────────────────────────────────────────────────────────┐
 │                        AEGIS-SOC PIPELINE                        │
 └─────────────────────────────────────────────────────────────────┘
