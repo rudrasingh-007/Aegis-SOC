@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Aegis-SOC Dashboard</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<style>
+		:root {
+			--bg-primary: #0a0e1a;
+			--bg-secondary: #1a1e2e;
+			--bg-tertiary: #111524;
+			--text-primary: #e6f1ff;
+			--text-muted: #8ea0c8;
+			--accent: #3aa7ff;
+			--critical: #ff4d4f;
+			--high: #ff9f43;
+			--medium: #ffd166;
+			--low: #2ecc71;
+			--confirmed: #ff6b6b;
+			--border: #26304a;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			font-family: "Consolas", "Menlo", "Monaco", monospace;
+			background: radial-gradient(circle at top right, #152038 0%, var(--bg-primary) 45%);
+			color: var(--text-primary);
+			min-height: 100vh;
+		}
+
+		.container {
+			width: min(1280px, 96vw);
+			margin: 24px auto 40px;
+		}
+
+		.header {
+			background: linear-gradient(120deg, var(--bg-secondary), var(--bg-tertiary));
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 22px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		.title-wrap h1 {
+			margin: 0;
+			font-size: 2rem;
+			letter-spacing: 0.08em;
+		}
+
+		.title-wrap p {
+			margin: 6px 0 0;
+			color: var(--text-muted);
+			font-size: 0.95rem;
+		}
+
+		.controls {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.run-btn {
+			background: linear-gradient(135deg, #1f8fff, #12b3a7);
+			border: none;
+			color: white;
+			font-weight: 700;
+			letter-spacing: 0.03em;
+			padding: 12px 18px;
+			border-radius: 8px;
+			cursor: pointer;
+		}
+
+		.run-btn:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		.loading {
+			display: none;
+			align-items: center;
+			gap: 8px;
+			color: var(--text-muted);
+			font-size: 0.9rem;
+		}
+
+		.loading.show {
+			display: inline-flex;
+		}
+
+		.spinner {
+			width: 14px;
+			height: 14px;
+			border-radius: 50%;
+			border: 2px solid #3a4466;
+			border-top-color: var(--accent);
+			animation: spin 0.8s linear infinite;
+		}
+
+		@keyframes spin {
+			to { transform: rotate(360deg); }
+		}
+
+		.stats-grid {
+			margin-top: 18px;
+			display: grid;
+			grid-template-columns: repeat(6, minmax(0, 1fr));
+			gap: 12px;
+		}
+
+		.stat-card {
+			background: var(--bg-secondary);
+			border: 1px solid var(--border);
+			border-left: 4px solid var(--accent);
+			border-radius: 10px;
+			padding: 12px;
+		}
+
+		.stat-card .label {
+			color: var(--text-muted);
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+		}
+
+		.stat-card .value {
+			margin-top: 6px;
+			font-size: 1.6rem;
+			font-weight: 700;
+		}
+
+		.stat-total { border-left-color: var(--accent); }
+		.stat-critical { border-left-color: var(--critical); }
+		.stat-high { border-left-color: var(--high); }
+		.stat-medium { border-left-color: var(--medium); }
+		.stat-low { border-left-color: var(--low); }
+		.stat-confirmed { border-left-color: var(--confirmed); }
+
+		.panel-grid {
+			margin-top: 18px;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 14px;
+		}
+
+		.panel {
+			background: var(--bg-secondary);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 14px;
+			min-height: 340px;
+		}
+
+		.panel h3 {
+			margin: 0 0 12px;
+			font-size: 1rem;
+			color: #d8e6ff;
+		}
+
+		.table-panel,
+		.correlation-panel {
+			margin-top: 14px;
+			background: var(--bg-secondary);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 14px;
+		}
+
+		.table-wrap {
+			overflow-x: auto;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			min-width: 760px;
+		}
+
+		th,
+		td {
+			border-bottom: 1px solid #2c3753;
+			padding: 10px 8px;
+			text-align: left;
+			font-size: 0.9rem;
+		}
+
+		th {
+			color: #bdd2ff;
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+		}
+
+		.sev {
+			padding: 4px 8px;
+			border-radius: 6px;
+			font-weight: 700;
+			font-size: 0.78rem;
+			display: inline-block;
+		}
+
+		.sev-critical { background: rgba(255, 77, 79, 0.16); color: var(--critical); }
+		.sev-high { background: rgba(255, 159, 67, 0.16); color: var(--high); }
+		.sev-medium { background: rgba(255, 209, 102, 0.16); color: var(--medium); }
+		.sev-low { background: rgba(46, 204, 113, 0.16); color: var(--low); }
+
+		.incident {
+			border: 1px solid #2c3753;
+			border-left: 4px solid var(--accent);
+			border-radius: 10px;
+			padding: 10px;
+			margin-bottom: 10px;
+			background: #131a2e;
+		}
+
+		.incident h4 {
+			margin: 0 0 6px;
+			font-size: 0.95rem;
+		}
+
+		.incident p {
+			margin: 4px 0;
+			color: var(--text-muted);
+			font-size: 0.88rem;
+		}
+
+		.muted {
+			color: var(--text-muted);
+		}
+
+		@media (max-width: 1100px) {
+			.stats-grid {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.panel-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		@media (max-width: 700px) {
+			.header {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.stats-grid {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header class="header">
+			<div class="title-wrap">
+				<h1>AEGIS-SOC</h1>
+				<p>Automated SOC Triage Dashboard</p>
+			</div>
+			<div class="controls">
+				<button id="runPipelineBtn" class="run-btn">Run Pipeline</button>
+				<div id="loadingIndicator" class="loading">
+					<span class="spinner"></span>
+					<span>Running pipeline...</span>
+				</div>
+			</div>
+		</header>
+
+		<section class="stats-grid">
+			<div class="stat-card stat-total">
+				<div class="label">Total Alerts</div>
+				<div class="value" id="totalAlerts">0</div>
+			</div>
+			<div class="stat-card stat-critical">
+				<div class="label">Critical</div>
+				<div class="value" id="criticalCount">0</div>
+			</div>
+			<div class="stat-card stat-high">
+				<div class="label">High</div>
+				<div class="value" id="highCount">0</div>
+			</div>
+			<div class="stat-card stat-medium">
+				<div class="label">Medium</div>
+				<div class="value" id="mediumCount">0</div>
+			</div>
+			<div class="stat-card stat-low">
+				<div class="label">Low</div>
+				<div class="value" id="lowCount">0</div>
+			</div>
+			<div class="stat-card stat-confirmed">
+				<div class="label">Threat Confirmed</div>
+				<div class="value" id="threatConfirmedCount">0</div>
+			</div>
+		</section>
+
+		<section class="panel-grid">
+			<div class="panel">
+				<h3>Severity Distribution</h3>
+				<canvas id="severityChart"></canvas>
+			</div>
+			<div class="panel">
+				<h3>Alert Types</h3>
+				<canvas id="alertTypeChart"></canvas>
+			</div>
+		</section>
+
+		<section class="table-panel">
+			<h3>All Alerts</h3>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Alert ID</th>
+							<th>Type</th>
+							<th>Source IP</th>
+							<th>Target System</th>
+							<th>Severity</th>
+							<th>Threat Confirmed</th>
+						</tr>
+					</thead>
+					<tbody id="alertsTableBody">
+						<tr>
+							<td colspan="6" class="muted">Run pipeline to view alerts.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section class="correlation-panel">
+			<h3>Correlated Incidents</h3>
+			<div id="correlatedIncidents" class="muted">No correlated incidents yet.</div>
+		</section>
+	</div>
+
+	<script>
+		const runPipelineBtn = document.getElementById("runPipelineBtn");
+		const loadingIndicator = document.getElementById("loadingIndicator");
+
+		let severityChart;
+		let alertTypeChart;
+
+		function setLoading(isLoading) {
+			runPipelineBtn.disabled = isLoading;
+			loadingIndicator.classList.toggle("show", isLoading);
+		}
+
+		function updateStats(summary) {
+			document.getElementById("totalAlerts").textContent = summary.total_alerts || 0;
+			document.getElementById("criticalCount").textContent = summary.critical_count || 0;
+			document.getElementById("highCount").textContent = summary.high_count || 0;
+			document.getElementById("mediumCount").textContent = summary.medium_count || 0;
+			document.getElementById("lowCount").textContent = summary.low_count || 0;
+			document.getElementById("threatConfirmedCount").textContent = summary.threat_confirmed_count || 0;
+		}
+
+		function renderSeverityChart(summary) {
+			const data = [
+				summary.critical_count || 0,
+				summary.high_count || 0,
+				summary.medium_count || 0,
+				summary.low_count || 0,
+			];
+
+			if (severityChart) {
+				severityChart.destroy();
+			}
+
+			severityChart = new Chart(document.getElementById("severityChart"), {
+				type: "bar",
+				data: {
+					labels: ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+					datasets: [
+						{
+							label: "Alert Count",
+							data,
+							backgroundColor: ["#ff4d4f", "#ff9f43", "#ffd166", "#2ecc71"],
+							borderRadius: 6,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					plugins: {
+						legend: { display: false },
+					},
+					scales: {
+						x: { ticks: { color: "#c9daff" }, grid: { color: "#25304a" } },
+						y: {
+							beginAtZero: true,
+							ticks: { color: "#c9daff", precision: 0 },
+							grid: { color: "#25304a" },
+						},
+					},
+				},
+			});
+		}
+
+		function renderAlertTypeChart(alerts) {
+			const typeCounts = {};
+			alerts.forEach((alert) => {
+				const type = alert.alert_type || "unknown";
+				typeCounts[type] = (typeCounts[type] || 0) + 1;
+			});
+
+			const labels = Object.keys(typeCounts);
+			const values = Object.values(typeCounts);
+
+			if (alertTypeChart) {
+				alertTypeChart.destroy();
+			}
+
+			alertTypeChart = new Chart(document.getElementById("alertTypeChart"), {
+				type: "bar",
+				data: {
+					labels,
+					datasets: [
+						{
+							label: "Alert Type Count",
+							data: values,
+							backgroundColor: "#3aa7ff",
+							borderRadius: 6,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					plugins: {
+						legend: { display: false },
+					},
+					scales: {
+						x: { ticks: { color: "#c9daff" }, grid: { color: "#25304a" } },
+						y: {
+							beginAtZero: true,
+							ticks: { color: "#c9daff", precision: 0 },
+							grid: { color: "#25304a" },
+						},
+					},
+				},
+			});
+		}
+
+		function severityClass(severity) {
+			if (severity === "CRITICAL") return "sev sev-critical";
+			if (severity === "HIGH") return "sev sev-high";
+			if (severity === "MEDIUM") return "sev sev-medium";
+			return "sev sev-low";
+		}
+
+		function renderAlertsTable(alerts) {
+			const tableBody = document.getElementById("alertsTableBody");
+			if (!alerts.length) {
+				tableBody.innerHTML = '<tr><td colspan="6" class="muted">No alerts returned.</td></tr>';
+				return;
+			}
+
+			tableBody.innerHTML = alerts
+				.map(
+					(alert) => `
+						<tr>
+							<td>${alert.alert_id || "N/A"}</td>
+							<td>${alert.alert_type || "N/A"}</td>
+							<td>${alert.source_ip || "N/A"}</td>
+							<td>${alert.target_system || "N/A"}</td>
+							<td><span class="${severityClass(alert.severity)}">${alert.severity || "N/A"}</span></td>
+							<td>${alert.threat_confirmed === true ? "Yes" : "No"}</td>
+						</tr>
+					`
+				)
+				.join("");
+		}
+
+		function renderCorrelatedIncidents(correlationResults) {
+			const wrapper = document.getElementById("correlatedIncidents");
+			const correlated = (correlationResults || []).filter((item) => item.correlated);
+
+			if (!correlated.length) {
+				wrapper.innerHTML = '<div class="muted">No correlated incidents detected.</div>';
+				return;
+			}
+
+			wrapper.innerHTML = correlated
+				.map(
+					(incident) => `
+						<div class="incident">
+							<h4>Source IP: ${incident.source_ip}</h4>
+							<p>Total Alerts: ${incident.total_alerts}</p>
+							<p>Highest Severity: ${incident.highest_severity}</p>
+							<p>Threat Confirmed: ${incident.threat_confirmed ? "Yes" : "No"}</p>
+							<p>${incident.summary}</p>
+						</div>
+					`
+				)
+				.join("");
+		}
+
+		async function runPipeline() {
+			setLoading(true);
+			try {
+				const response = await fetch("/run-pipeline", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+				});
+
+				if (!response.ok) {
+					throw new Error(`Pipeline request failed with status ${response.status}`);
+				}
+
+				const data = await response.json();
+				const alerts = data.alerts || [];
+				const correlationResults = data.correlation_results || [];
+				const summary = data.summary || {};
+
+				updateStats(summary);
+				renderSeverityChart(summary);
+				renderAlertTypeChart(alerts);
+				renderAlertsTable(alerts);
+				renderCorrelatedIncidents(correlationResults);
+			} catch (error) {
+				alert("Failed to run pipeline. Check server logs and try again.");
+				console.error(error);
+			} finally {
+				setLoading(false);
+			}
+		}
+
+		runPipelineBtn.addEventListener("click", runPipeline);
+	</script>
+</body>
+</html>
