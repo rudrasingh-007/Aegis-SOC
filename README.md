@@ -9,7 +9,7 @@
 
 ```
 SYSTEM     : Automated L1 SOC Triage System
-VERSION    : 2.0
+VERSION    : 3.0
 STATUS     : ACTIVE
 CLEARANCE  : OPEN SOURCE
 ```
@@ -24,20 +24,38 @@ Built by a cybersecurity aspirant as a serious contribution to the SOC automatio
 
 ---
 
+---
+
+## FEATURES
+
+```
+[+]  Realistic Alert Simulation       10 attack vectors across 5 target systems
+[+]  Rule Based Classification        LOW / MEDIUM / HIGH / CRITICAL severity engine
+[+]  Dual Source Threat Intel         AbuseIPDB + VirusTotal cross-validation
+[+]  Email Notifications              Real-time CRITICAL alert dispatch via Gmail SMTP
+[+]  Structured Report Generation     Console + JSON incident reports per alert
+[+]  False Positive Tracking          Persistent FP registry for rule tuning
+[+]  L2 Investigation Engine          Automated deep analysis with isolation recommendations
+[+]  Alert Correlation                Multi-vector attack detection by source IP grouping
+[+]  Wazuh SIEM Integration           Wazuh compatible ingestion layer for live connectivity
+```
+
 ## THREAT PIPELINE
 
 ```
-[SIMULATOR] → [RULE ENGINE] → [THREAT INTEL] → [NOTIFIER] → [REPORTER] → [FP LOGGER]
-```
+[SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [CORRELATOR] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [FP LOGGER]
 
+```
 | Stage | Module | Function |
 |---|---|---|
-| 01 | Alert Simulator | Generates synthetic security alerts across 10 attack vectors |
+| 01 | Alert Simulator / Wazuh Ingestor | Generates or ingests security alerts |
 | 02 | Rule Engine | Classifies severity — LOW / MEDIUM / HIGH / CRITICAL |
 | 03 | Threat Intel | Dual source enrichment via AbuseIPDB + VirusTotal |
-| 04 | Email Notifier | Dispatches analyst notifications for CRITICAL incidents |
-| 05 | Report Generator | Outputs structured console + JSON incident reports |
-| 06 | FP Logger | Maintains persistent false positive registry |
+| 04 | Alert Correlator | Groups related alerts by source IP |
+| 05 | Email Notifier | Dispatches analyst notifications for CRITICAL incidents |
+| 06 | Report Generator | Outputs structured console + JSON incident reports |
+| 07 | L2 Investigation Engine | Deep automated analysis for CRITICAL alerts |
+| 08 | FP Logger | Maintains persistent false positive registry |
 
 ---
 
@@ -83,9 +101,18 @@ Aegis-SOC/
 │   └── report_generator.py        # Incident report generation
 ├── logger/
 │   └── false_positive_logger.py   # False positive registry
+├── l2_investigator/
+│   └── l2_engine.py                  # L2 automated investigation engine
+├── correlator/
+│   └── alert_correlator.py           # Multi-vector alert correlation
+├── integrations/
+│   └── wazuh_ingestor.py             # Wazuh SIEM ingestion layer
+├── l2_reports/                        # L2 investigation reports
+├── correlation_reports/               # Correlation reports
 ├── reports/                       # Generated incident reports
 ├── requirements.txt               # Dependencies
 └── README.md                      # Documentation
+
 ```
 
 ---
@@ -128,7 +155,7 @@ python main.py
 ```
 [COMPLETE]  V1 — Core triage pipeline
 [COMPLETE]  V2 — Dual threat intel, email alerts, FP tracking
-[PLANNED]   V3 — L2 automation, SIEM integration, alert correlation
+[COMPLETE]  V3 — L2 automation, Wazuh SIEM integration, alert correlation
 [PLANNED]   V4 — Dashboard UI, ML detection, response playbooks
 ```
 
