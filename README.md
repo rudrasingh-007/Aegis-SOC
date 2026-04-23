@@ -9,7 +9,7 @@
 
 ```
 SYSTEM     : Automated L1 SOC Triage System
-VERSION    : 3.0
+VERSION    : 4.0
 STATUS     : ACTIVE
 CLEARANCE  : OPEN SOURCE
 ```
@@ -38,12 +38,15 @@ Built by a cybersecurity aspirant as a serious contribution to the SOC automatio
 [+]  L2 Investigation Engine          Automated deep analysis with isolation recommendations
 [+]  Alert Correlation                Multi-vector attack detection by source IP grouping
 [+]  Wazuh SIEM Integration           Wazuh compatible ingestion layer for live connectivity
+[+]  Automated Response Playbooks     Step-by-step incident response for 6 attack types
+[+]  Anomaly Detection Engine         Z-score based statistical anomaly detection
+[+]  Live SOC Dashboard               Flask web dashboard with charts, alerts table, and pipeline control
 ```
 
 ## THREAT PIPELINE
 
 ```
-[SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [CORRELATOR] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [FP LOGGER]
+[SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [ANOMALY DETECTOR] → [CORRELATOR] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [PLAYBOOKS] → [FP LOGGER]
 
 ```
 | Stage | Module | Function |
@@ -109,6 +112,14 @@ Aegis-SOC/
 │   └── wazuh_ingestor.py             # Wazuh SIEM ingestion layer
 ├── l2_reports/                        # L2 investigation reports
 ├── correlation_reports/               # Correlation reports
+├── anomaly/
+│   └── anomaly_detector.py           # Z-score based anomaly detection
+├── playbooks/
+│   └── response_playbooks.py         # Automated incident response playbooks
+├── dashboard/
+│   ├── app.py                        # Flask dashboard server
+│   └── templates/
+│       └── index.html                # SOC dashboard UI
 ├── reports/                       # Generated incident reports
 ├── requirements.txt               # Dependencies
 └── README.md                      # Documentation
@@ -148,7 +159,13 @@ EMAIL_RECEIVER=your_gmail@gmail.com
 python main.py
 ```
 
+**Run Dashboard**
+```bash
+python -m dashboard.app
+```
+Then open http://localhost:5000 in your browser.
 ---
+
 
 ## ROADMAP
 
@@ -156,7 +173,8 @@ python main.py
 [COMPLETE]  V1 — Core triage pipeline
 [COMPLETE]  V2 — Dual threat intel, email alerts, FP tracking
 [COMPLETE]  V3 — L2 automation, Wazuh SIEM integration, alert correlation
-[PLANNED]   V4 — Dashboard UI, ML detection, response playbooks
+[COMPLETE]  V4 — Dashboard UI, anomaly detection, response playbooks
+[PLANNED]   V5 — ML based detection, live SIEM feed, multi-user support
 ```
 
 ---
