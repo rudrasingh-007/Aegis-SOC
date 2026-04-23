@@ -39,7 +39,7 @@ def generate_alert():
 	"""Generate and return a single simulated alert dictionary."""
 	return {
 		"alert_id": f"ALERT-{random.randint(100000, 999999)}",
-		"timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
 		"source_ip": random.choice(SOURCE_IPS),
 		"alert_type": random.choice(ALERT_TYPES),
 		"target_system": random.choice(TARGET_SYSTEMS),

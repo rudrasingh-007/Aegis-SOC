@@ -14,45 +14,101 @@ from reporter.report_generator import generate_reports
 
 def main():
 	"""Run the end-to-end Aegis-SOC alert processing pipeline."""
-	print("=" * 55)
-	print("Aegis-SOC Cybersecurity Alert Processing Pipeline")
-	print("=" * 55)
+	alerts = []
+	wazuh_alerts = []
+	current_step = "pipeline initialization"
 
-	print("[Aegis-SOC] Generating sample Wazuh alerts for integration demo...")
-	generate_sample_wazuh_alerts()
-	wazuh_alerts = load_wazuh_alerts_from_file("integrations/sample_wazuh_alerts.json")
-	print(f"[Aegis-SOC] Loaded {len(wazuh_alerts)} Wazuh alerts into pipeline.")
-	alerts = generate_alerts(5)
-	alerts = alerts + wazuh_alerts
+	try:
+		print("=" * 55)
+		print("Aegis-SOC Cybersecurity Alert Processing Pipeline")
+		print("=" * 55)
 
-	alerts = generate_alerts(5)
-	print("[Aegis-SOC] Alerts have been generated.")
+		current_step = "generate sample Wazuh alerts"
+		try:
+			print("[Aegis-SOC] Generating sample Wazuh alerts for integration demo...")
+			generate_sample_wazuh_alerts()
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	alerts = process_alerts(alerts)
-	print("[Aegis-SOC] Rule engine classification is done.")
+		current_step = "load Wazuh alerts from file"
+		try:
+			wazuh_alerts = load_wazuh_alerts_from_file("integrations/sample_wazuh_alerts.json")
+			print(f"[Aegis-SOC] Loaded {len(wazuh_alerts)} Wazuh alerts into pipeline.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	alerts = enrich_alerts(alerts)
-	print("[Aegis-SOC] Threat intel enrichment is done.")
+		current_step = "generate alerts"
+		try:
+			alerts = generate_alerts(5)
+			alerts = alerts + wazuh_alerts
+			print("[Aegis-SOC] Alerts have been generated.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	alerts = run_anomaly_detection(alerts)
-	print("[Aegis-SOC] Anomaly detection complete.")
+		current_step = "rule engine classification"
+		try:
+			alerts = process_alerts(alerts)
+			print("[Aegis-SOC] Rule engine classification is done.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	correlate_alerts(alerts)
-	print("[Aegis-SOC] Alert correlation complete.")
+		current_step = "threat intel enrichment"
+		try:
+			alerts = enrich_alerts(alerts)
+			print("[Aegis-SOC] Threat intel enrichment is done.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	notify_critical_alerts(alerts)
-	print("[Aegis-SOC] Critical alert notifications sent.")
-	
-	generate_reports(alerts)
+		current_step = "anomaly detection"
+		try:
+			alerts = run_anomaly_detection(alerts)
+			print("[Aegis-SOC] Anomaly detection complete.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	run_l2_investigation(alerts)
-	print("[Aegis-SOC] L2 investigations complete.")
+		current_step = "alert correlation"
+		try:
+			correlate_alerts(alerts)
+			print("[Aegis-SOC] Alert correlation complete.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	run_playbooks(alerts)
-	print("[Aegis-SOC] Response playbooks executed.")
+		current_step = "critical alert notification"
+		try:
+			notify_critical_alerts(alerts)
+			print("[Aegis-SOC] Critical alert notifications sent.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
-	log_false_positives(alerts)
-	print("[Aegis-SOC] Pipeline complete.")
+		current_step = "report generation"
+		try:
+			generate_reports(alerts)
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "l2 investigation"
+		try:
+			run_l2_investigation(alerts)
+			print("[Aegis-SOC] L2 investigations complete.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "response playbook execution"
+		try:
+			run_playbooks(alerts)
+			print("[Aegis-SOC] Response playbooks executed.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "false positive logging"
+		try:
+			log_false_positives(alerts)
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		print("[Aegis-SOC] Pipeline complete.")
+	except Exception as error:
+		print(f"[Aegis-SOC][ERROR] Pipeline failed at step '{current_step}'. Details: {error}")
 
 
 if __name__ == "__main__":
