@@ -76,6 +76,12 @@ def investigate(alert):
 
 	report = {
 		"report_generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+		"alert_id": alert.get("alert_id"),
+		"severity": alert.get("severity"),
+		"alert_type": alert.get("alert_type"),
+		"target_system": alert.get("target_system"),
+		"impact_level": impact_assessment["impact_level"],
+		"isolation_recommendation": impact_assessment["isolation_recommendation"],
 		"original_alert": alert,
 		"timeline": timeline,
 		"impact_assessment": impact_assessment,
@@ -108,6 +114,8 @@ def investigate(alert):
 			print(f"  - {key}: {value}")
 	print(f"Report Saved To: {output_path}")
 	print("=" * 60)
+
+	return report
 
 
 def run_l2_investigation(alerts):
