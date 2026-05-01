@@ -1,6 +1,11 @@
 import unittest
 
-from engine.rule_engine import classify_alert, process_alerts
+from engine.rule_engine import (
+	classify_alert,
+	process_alerts,
+	reclassify_alerts,
+	reclassify_with_threat_intel,
+)
 
 
 class TestRuleEngine(unittest.TestCase):
@@ -37,6 +42,30 @@ class TestRuleEngine(unittest.TestCase):
 		processed = process_alerts(alerts)
 		self.assertEqual(len(processed), 3)
 		self.assertTrue(all("severity" in alert for alert in processed))
+
+	def test_reclassify_with_threat_intel_bumps_two_levels(self):
+		alert = {"severity": "LOW", "abuse_score": 91, "virustotal_score": 0}
+		updated = reclassify_with_threat_intel(alert)
+		self.assertEqual(updated["severity"], "HIGH")
+
+	def test_reclassify_with_threat_intel_bumps_one_level(self):
+		alert = {"severity": "MEDIUM", "abuse_score": 76, "virustotal_score": 0}
+		updated = reclassify_with_threat_intel(alert)
+		self.assertEqual(updated["severity"], "HIGH")
+
+	def test_reclassify_with_threat_intel_caps_at_critical(self):
+		alert = {"severity": "HIGH", "abuse_score": 95, "virustotal_score": 12}
+		updated = reclassify_with_threat_intel(alert)
+		self.assertEqual(updated["severity"], "CRITICAL")
+
+	def test_reclassify_alerts_updates_all_alerts(self):
+		alerts = [
+			{"severity": "LOW", "abuse_score": 0, "virustotal_score": 0},
+			{"severity": "LOW", "abuse_score": 80, "virustotal_score": 0},
+		]
+		updated = reclassify_alerts(alerts)
+		self.assertEqual(updated[0]["severity"], "LOW")
+		self.assertEqual(updated[1]["severity"], "MEDIUM")
 
 
 if __name__ == "__main__":

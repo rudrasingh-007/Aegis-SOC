@@ -9,6 +9,9 @@ from config.config import (
 )
 
 
+SEVERITY_ORDER = [LOW, MEDIUM, HIGH, CRITICAL]
+
+
 def classify_alert(alert):
 	"""Classify a single alert dictionary and return a severity level."""
 	alert_type = alert.get("alert_type")
@@ -57,4 +60,36 @@ def process_alerts(alerts):
 	"""Add severity to each alert and return the same list."""
 	for alert in alerts:
 		alert["severity"] = classify_alert(alert)
+	return alerts
+
+
+def _bump_severity(severity, levels):
+	"""Raise severity by the requested number of levels without exceeding CRITICAL."""
+	try:
+		current_index = SEVERITY_ORDER.index(severity)
+	except ValueError:
+		return severity
+
+	new_index = min(current_index + levels, len(SEVERITY_ORDER) - 1)
+	return SEVERITY_ORDER[new_index]
+
+
+def reclassify_with_threat_intel(alert):
+	"""Reclassify severity upward using threat intel scores."""
+	severity = alert.get("severity", LOW)
+	abuse_score = alert.get("abuse_score", 0)
+	virustotal_score = alert.get("virustotal_score", 0)
+
+	if abuse_score > 90 or virustotal_score >= 10:
+		alert["severity"] = _bump_severity(severity, 2)
+	elif abuse_score > 75 or virustotal_score >= 5:
+		alert["severity"] = _bump_severity(severity, 1)
+
+	return alert
+
+
+def reclassify_alerts(alerts):
+	"""Reclassify a list of alerts using threat intel scores."""
+	for alert in alerts:
+		reclassify_with_threat_intel(alert)
 	return alerts
