@@ -5,6 +5,75 @@ import json
 import datetime
 
 
+KNOWN_ATTACK_CHAINS = [
+	["port_scan", "brute_force", "privilege_escalation"],
+	["port_scan", "brute_force", "malware_detected", "ransomware_detected"],
+	[
+		"unauthorized_wifi_access",
+		"suspicious_connection",
+		"failed_login",
+		"privilege_escalation",
+	],
+	["brute_force", "dns_tunneling", "suspicious_connection"],
+]
+
+
+def _sort_alerts_by_timestamp(alerts):
+	"""Return alerts ordered by timestamp."""
+	return sorted(
+		alerts,
+		key=lambda alert: datetime.datetime.strptime(
+			alert["timestamp"], "%Y-%m-%d %H:%M:%S"
+		),
+	)
+
+
+def detect_time_window(alerts):
+	"""Detect whether any two alerts occur within 60 seconds of each other."""
+	if len(alerts) < 2:
+		return False
+
+	ordered_alerts = _sort_alerts_by_timestamp(alerts)
+	parsed_timestamps = [
+		datetime.datetime.strptime(alert["timestamp"], "%Y-%m-%d %H:%M:%S")
+		for alert in ordered_alerts
+	]
+
+	for first_timestamp, second_timestamp in zip(
+		parsed_timestamps, parsed_timestamps[1:]
+	):
+		if (second_timestamp - first_timestamp).total_seconds() <= 60:
+			return True
+
+	return False
+
+
+def _contains_subsequence(sequence, chain):
+	"""Check whether chain appears as an ordered subsequence in sequence."""
+	chain_index = 0
+	for item in sequence:
+		if item == chain[chain_index]:
+			chain_index += 1
+			if chain_index == len(chain):
+				return True
+	return False
+
+
+def detect_attack_sequence(alerts):
+	"""Detect whether any known attack chain appears in timestamp order."""
+	if not alerts:
+		return {"sequence_detected": False, "matched_chain": None}
+
+	ordered_alerts = _sort_alerts_by_timestamp(alerts)
+	alert_types = [alert.get("alert_type", "unknown") for alert in ordered_alerts]
+
+	for chain in KNOWN_ATTACK_CHAINS:
+		if _contains_subsequence(alert_types, chain):
+			return {"sequence_detected": True, "matched_chain": chain}
+
+	return {"sequence_detected": False, "matched_chain": None}
+
+
 def group_by_ip(alerts):
 	"""Group alerts by source IP address."""
 	grouped = {}
@@ -25,6 +94,9 @@ def assess_correlation(alert_group):
 			"highest_severity": "LOW",
 			"threat_confirmed": False,
 			"correlated": False,
+			"rapid_attack": False,
+			"sequence_detected": False,
+			"matched_chain": None,
 			"summary": "No alerts available for correlation.",
 		}
 
@@ -47,6 +119,8 @@ def assess_correlation(alert_group):
 
 	threat_confirmed = any(alert.get("threat_confirmed") is True for alert in alert_group)
 	correlated = total_alerts >= 2
+	rapid_attack = detect_time_window(alert_group)
+	sequence_result = detect_attack_sequence(alert_group)
 
 	if correlated:
 		summary = (
@@ -67,6 +141,9 @@ def assess_correlation(alert_group):
 		"highest_severity": highest_severity,
 		"threat_confirmed": threat_confirmed,
 		"correlated": correlated,
+		"rapid_attack": rapid_attack,
+		"sequence_detected": sequence_result["sequence_detected"],
+		"matched_chain": sequence_result["matched_chain"],
 		"summary": summary,
 	}
 
@@ -105,6 +182,12 @@ def correlate_alerts(alerts):
 			print(f"Highest Severity: {incident['highest_severity']}")
 			print(f"Threat Confirmed: {incident['threat_confirmed']}")
 			print(f"Summary: {incident['summary']}")
+			print(f"Rapid Attack: {incident['rapid_attack']}")
+			print(f"Sequence Detected: {incident['sequence_detected']}")
+			if incident.get("matched_chain") is not None:
+				print(f"Matched Chain: {' → '.join(incident['matched_chain'])}")
+			else:
+				print("Matched Chain: None")
 			print("-" * 60)
 
 	return correlation_results

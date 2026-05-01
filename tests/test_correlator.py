@@ -1,6 +1,12 @@
 import unittest
 
-from correlator.alert_correlator import group_by_ip, assess_correlation, correlate_alerts
+from correlator.alert_correlator import (
+	assess_correlation,
+	correlate_alerts,
+	detect_attack_sequence,
+	detect_time_window,
+	group_by_ip,
+)
 
 
 class TestAlertCorrelator(unittest.TestCase):
@@ -9,6 +15,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A1",
 				"source_ip": "10.0.0.1",
+				"timestamp": "2026-05-01 12:00:00",
 				"alert_type": "port_scan",
 				"target_system": "web_server",
 				"severity": "MEDIUM",
@@ -16,6 +23,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A2",
 				"source_ip": "10.0.0.1",
+				"timestamp": "2026-05-01 12:01:00",
 				"alert_type": "failed_login",
 				"target_system": "database",
 				"severity": "HIGH",
@@ -23,6 +31,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A3",
 				"source_ip": "10.0.0.2",
+				"timestamp": "2026-05-01 12:02:00",
 				"alert_type": "malware_detected",
 				"target_system": "employee_workstation",
 				"severity": "CRITICAL",
@@ -32,11 +41,33 @@ class TestAlertCorrelator(unittest.TestCase):
 		self.assertEqual(len(grouped), 2)
 		self.assertEqual(len(grouped["10.0.0.1"]), 2)
 
+	def test_detect_time_window_returns_true_for_alerts_within_60_seconds(self):
+		alerts = [
+			{"timestamp": "2026-05-01 12:00:00", "alert_type": "port_scan"},
+			{"timestamp": "2026-05-01 12:00:45", "alert_type": "failed_login"},
+		]
+		self.assertTrue(detect_time_window(alerts))
+
+	def test_detect_attack_sequence_finds_known_chain(self):
+		alerts = [
+			{"timestamp": "2026-05-01 12:00:00", "alert_type": "port_scan"},
+			{"timestamp": "2026-05-01 12:00:30", "alert_type": "noise"},
+			{"timestamp": "2026-05-01 12:01:00", "alert_type": "brute_force"},
+			{"timestamp": "2026-05-01 12:02:00", "alert_type": "privilege_escalation"},
+		]
+		result = detect_attack_sequence(alerts)
+		self.assertTrue(result["sequence_detected"])
+		self.assertEqual(
+			result["matched_chain"],
+			["port_scan", "brute_force", "privilege_escalation"],
+		)
+
 	def test_assess_correlation_single_alert_not_correlated(self):
 		alert_group = [
 			{
 				"alert_id": "A1",
 				"source_ip": "10.0.0.1",
+				"timestamp": "2026-05-01 12:00:00",
 				"alert_type": "port_scan",
 				"target_system": "web_server",
 				"severity": "MEDIUM",
@@ -51,6 +82,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A1",
 				"source_ip": "10.0.0.1",
+				"timestamp": "2026-05-01 12:00:00",
 				"alert_type": "port_scan",
 				"target_system": "web_server",
 				"severity": "MEDIUM",
@@ -59,6 +91,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A2",
 				"source_ip": "10.0.0.1",
+				"timestamp": "2026-05-01 12:00:30",
 				"alert_type": "failed_login",
 				"target_system": "database",
 				"severity": "HIGH",
@@ -73,6 +106,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A1",
 				"source_ip": "10.0.0.3",
+				"timestamp": "2026-05-01 12:00:00",
 				"alert_type": "suspicious_connection",
 				"target_system": "web_server",
 				"severity": "MEDIUM",
@@ -81,6 +115,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A2",
 				"source_ip": "10.0.0.3",
+				"timestamp": "2026-05-01 12:00:45",
 				"alert_type": "ransomware_detected",
 				"target_system": "database",
 				"severity": "CRITICAL",
@@ -95,6 +130,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A1",
 				"source_ip": "10.0.0.4",
+				"timestamp": "2026-05-01 12:00:00",
 				"alert_type": "failed_login",
 				"target_system": "domain_controller",
 				"severity": "HIGH",
@@ -103,6 +139,7 @@ class TestAlertCorrelator(unittest.TestCase):
 			{
 				"alert_id": "A2",
 				"source_ip": "10.0.0.4",
+				"timestamp": "2026-05-01 12:00:50",
 				"alert_type": "malware_detected",
 				"target_system": "domain_controller",
 				"severity": "CRITICAL",
@@ -111,6 +148,9 @@ class TestAlertCorrelator(unittest.TestCase):
 		]
 		result = assess_correlation(alert_group)
 		self.assertTrue(result["threat_confirmed"])
+		self.assertTrue(result["rapid_attack"])
+		self.assertFalse(result["sequence_detected"])
+		self.assertIsNone(result["matched_chain"])
 
 
 if __name__ == "__main__":
