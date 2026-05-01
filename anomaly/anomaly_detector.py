@@ -4,6 +4,7 @@ import os
 import json
 import datetime
 import statistics
+from storage.history_store import save_alerts, get_historical_data
 
 
 def calculate_zscore(value, mean, standard_deviation):
@@ -25,11 +26,16 @@ def _safe_stdev(values):
 	return statistics.stdev(values)
 
 
-def detect_attempt_count_anomalies(alerts):
-	"""Flag alerts with anomalous attempt_count values."""
-	attempt_counts = [alert.get("attempt_count", 0) for alert in alerts]
-	mean_value = _safe_mean(attempt_counts)
-	standard_deviation = _safe_stdev(attempt_counts)
+def detect_attempt_count_anomalies(alerts, baseline_alerts=None):
+	"""Flag alerts with anomalous attempt_count values using baseline data."""
+	if baseline_alerts is None:
+		baseline_alerts = alerts
+	
+	baseline_attempt_counts = [
+		alert.get("attempt_count", 0) for alert in baseline_alerts
+	]
+	mean_value = _safe_mean(baseline_attempt_counts)
+	standard_deviation = _safe_stdev(baseline_attempt_counts)
 
 	for alert in alerts:
 		attempt_count = alert.get("attempt_count", 0)
@@ -40,20 +46,23 @@ def detect_attempt_count_anomalies(alerts):
 	return alerts
 
 
-def detect_ip_frequency_anomalies(alerts):
-	"""Flag alerts from IPs that appear with anomalous frequency."""
-	ip_counts = {}
-	for alert in alerts:
+def detect_ip_frequency_anomalies(alerts, baseline_alerts=None):
+	"""Flag alerts from IPs that appear with anomalous frequency using baseline data."""
+	if baseline_alerts is None:
+		baseline_alerts = alerts
+	
+	baseline_ip_counts = {}
+	for alert in baseline_alerts:
 		source_ip = alert.get("source_ip", "unknown")
-		ip_counts[source_ip] = ip_counts.get(source_ip, 0) + 1
+		baseline_ip_counts[source_ip] = baseline_ip_counts.get(source_ip, 0) + 1
 
-	counts = list(ip_counts.values())
+	counts = list(baseline_ip_counts.values())
 	mean_value = _safe_mean(counts)
 	standard_deviation = _safe_stdev(counts)
 
 	ip_scores = {
 		source_ip: calculate_zscore(count, mean_value, standard_deviation)
-		for source_ip, count in ip_counts.items()
+		for source_ip, count in baseline_ip_counts.items()
 	}
 
 	for alert in alerts:
@@ -65,20 +74,25 @@ def detect_ip_frequency_anomalies(alerts):
 	return alerts
 
 
-def detect_alert_type_anomalies(alerts):
-	"""Flag alerts whose alert type appears with anomalous frequency."""
-	alert_type_counts = {}
-	for alert in alerts:
+def detect_alert_type_anomalies(alerts, baseline_alerts=None):
+	"""Flag alerts whose type appears with anomalous frequency using baseline data."""
+	if baseline_alerts is None:
+		baseline_alerts = alerts
+	
+	baseline_alert_type_counts = {}
+	for alert in baseline_alerts:
 		alert_type = alert.get("alert_type", "unknown")
-		alert_type_counts[alert_type] = alert_type_counts.get(alert_type, 0) + 1
+		baseline_alert_type_counts[alert_type] = (
+			baseline_alert_type_counts.get(alert_type, 0) + 1
+		)
 
-	counts = list(alert_type_counts.values())
+	counts = list(baseline_alert_type_counts.values())
 	mean_value = _safe_mean(counts)
 	standard_deviation = _safe_stdev(counts)
 
 	alert_type_scores = {
 		alert_type: calculate_zscore(count, mean_value, standard_deviation)
-		for alert_type, count in alert_type_counts.items()
+		for alert_type, count in baseline_alert_type_counts.items()
 	}
 
 	for alert in alerts:
@@ -92,9 +106,16 @@ def detect_alert_type_anomalies(alerts):
 
 def run_anomaly_detection(alerts):
 	"""Run all anomaly detectors, print a summary, and save a JSON report."""
-	detect_attempt_count_anomalies(alerts)
-	detect_ip_frequency_anomalies(alerts)
-	detect_alert_type_anomalies(alerts)
+	# Persist current alerts to database
+	save_alerts(alerts)
+	
+	# Retrieve all historical alerts as baseline
+	historical_alerts = get_historical_data()
+	
+	# Run detectors using historical data as baseline
+	detect_attempt_count_anomalies(alerts, baseline_alerts=historical_alerts)
+	detect_ip_frequency_anomalies(alerts, baseline_alerts=historical_alerts)
+	detect_alert_type_anomalies(alerts, baseline_alerts=historical_alerts)
 
 	attempt_count_anomalies = sum(
 		1 for alert in alerts if alert.get("attempt_count_anomaly")
