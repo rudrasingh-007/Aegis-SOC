@@ -18,13 +18,21 @@ KNOWN_ATTACK_CHAINS = [
 ]
 
 
+def _parse_timestamp(timestamp_value):
+	"""Parse supported alert timestamp formats."""
+	try:
+		return datetime.datetime.strptime(timestamp_value, "%Y-%m-%d %H:%M:%S")
+	except ValueError:
+		if timestamp_value.endswith("Z"):
+			timestamp_value = timestamp_value[:-1]
+		return datetime.datetime.fromisoformat(timestamp_value)
+
+
 def _sort_alerts_by_timestamp(alerts):
 	"""Return alerts ordered by timestamp."""
 	return sorted(
 		alerts,
-		key=lambda alert: datetime.datetime.strptime(
-			alert["timestamp"], "%Y-%m-%d %H:%M:%S"
-		),
+		key=lambda alert: _parse_timestamp(alert["timestamp"]),
 	)
 
 
@@ -35,7 +43,7 @@ def detect_time_window(alerts):
 
 	ordered_alerts = _sort_alerts_by_timestamp(alerts)
 	parsed_timestamps = [
-		datetime.datetime.strptime(alert["timestamp"], "%Y-%m-%d %H:%M:%S")
+		_parse_timestamp(alert["timestamp"])
 		for alert in ordered_alerts
 	]
 
