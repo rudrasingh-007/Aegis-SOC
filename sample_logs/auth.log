@@ -1,0 +1,37 @@
+May  2 04:17:32 secserver sshd[12847]: Invalid user root from 185.220.101.14 port 52184
+May  2 04:17:33 secserver sshd[12848]: Failed password for invalid user root from 185.220.101.14 port 52185 ssh2
+May  2 04:17:34 secserver sshd[12849]: Failed password for invalid user root from 185.220.101.14 port 52186 ssh2
+May  2 04:17:35 secserver sshd[12850]: Failed password for invalid user root from 185.220.101.14 port 52187 ssh2
+May  2 04:17:36 secserver sshd[12851]: Failed password for invalid user root from 185.220.101.14 port 52188 ssh2
+May  2 04:17:37 secserver sshd[12852]: Failed password for invalid user root from 185.220.101.14 port 52189 ssh2
+May  2 04:17:38 secserver sshd[12853]: Failed password for invalid user root from 185.220.101.14 port 52190 ssh2
+May  2 04:17:39 secserver sshd[12854]: Failed password for invalid user root from 185.220.101.14 port 52191 ssh2
+May  2 04:17:40 secserver sshd[12855]: Failed password for invalid user root from 185.220.101.14 port 52192 ssh2
+May  2 04:17:41 secserver sshd[12856]: Failed password for invalid user root from 185.220.101.14 port 52193 ssh2
+May  2 04:17:42 secserver sshd[12857]: Failed password for invalid user root from 185.220.101.14 port 52194 ssh2
+May  2 04:17:43 secserver sshd[12858]: Failed password for invalid user root from 185.220.101.14 port 52195 ssh2
+May  2 04:17:44 secserver sshd[12859]: Failed password for invalid user root from 185.220.101.14 port 52196 ssh2
+May  2 04:17:45 secserver sshd[12860]: Failed password for invalid user root from 185.220.101.14 port 52197 ssh2
+May  2 04:17:46 secserver sshd[12861]: Failed password for invalid user root from 185.220.101.14 port 52198 ssh2
+May  2 04:18:12 secserver sshd[12947]: Failed password for admin from 203.0.113.45 port 41923 ssh2
+May  2 04:21:54 secserver sshd[12948]: Failed password for admin from 203.0.113.45 port 41924 ssh2
+May  2 04:25:33 secserver sshd[13051]: Accepted password for john from 192.168.1.10 port 38102 ssh2
+May  2 04:25:34 secserver sshd[13051]: pam_unix(sshd:session): session opened for user john by (uid=0)
+May  2 04:32:17 secserver sudo: john : TTY=pts/0 ; PWD=/home/john ; USER=root ; COMMAND=/bin/bash
+May  2 04:32:17 secserver sudo: pam_unix(sudo:auth): authentication failure; logname=john uid=1001 euid=0 tty=pts/0 ruser=john rhost= user=root
+May  2 04:32:17 secserver sudo: john : 1 incorrect password attempt ; TTY=pts/0 ; PWD=/home/john ; USER=root ; COMMAND=/bin/bash
+May  2 04:45:18 secserver sshd[13152]: Invalid user ubuntu from 91.240.118.171 port 53412
+May  2 04:45:19 secserver sshd[13153]: Failed password for invalid user ubuntu from 91.240.118.171 port 53413 ssh2
+May  2 04:45:20 secserver sshd[13154]: Failed password for invalid user ubuntu from 91.240.118.171 port 53414 ssh2
+May  2 04:45:21 secserver sshd[13155]: Failed password for invalid user ubuntu from 91.240.118.171 port 53415 ssh2
+May  2 04:45:22 secserver sshd[13156]: Failed password for invalid user ubuntu from 91.240.118.171 port 53416 ssh2
+May  2 04:45:23 secserver sshd[13157]: Failed password for invalid user ubuntu from 91.240.118.171 port 53417 ssh2
+May  2 04:45:24 secserver sshd[13158]: Failed password for invalid user ubuntu from 91.240.118.171 port 53418 ssh2
+May  2 04:45:25 secserver sshd[13159]: Failed password for invalid user ubuntu from 91.240.118.171 port 53419 ssh2
+May  2 04:45:26 secserver sshd[13160]: Failed password for invalid user ubuntu from 91.240.118.171 port 53420 ssh2
+May  2 04:45:27 secserver sshd[13161]: Failed password for invalid user ubuntu from 91.240.118.171 port 53421 ssh2
+May  2 04:45:28 secserver sshd[13162]: Failed password for invalid user ubuntu from 91.240.118.171 port 53422 ssh2
+May  2 04:47:05 secserver sshd[13251]: Accepted password for john from 192.168.1.10 port 38103 ssh2
+May  2 04:47:06 secserver sshd[13251]: pam_unix(sshd:session): session opened for user john by (uid=0)
+May  2 04:50:42 secserver sshd[13252]: Received disconnect from 192.168.1.10 port 38103:11: disconnected by user
+May  2 04:50:42 secserver sshd[13251]: pam_unix(sshd:session): session closed for user john

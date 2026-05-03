@@ -16,6 +16,7 @@ from flask import (
 )
 
 from simulator.alert_simulator import generate_alerts
+from log_parser.auth_log_parser import parse_auth_log_content
 from engine.rule_engine import process_alerts
 from enrichment.threat_intel import enrich_alerts
 from correlator.alert_correlator import correlate_alerts
@@ -223,9 +224,24 @@ def index():
 @app.route("/run-pipeline", methods=["POST"])
 def run_pipeline():
 	"""Run the end-to-end Aegis-SOC pipeline and return JSON results."""
-	data = request.get_json(silent=True) or {}
-	count = int(data.get("count", 5))
-	alerts = generate_alerts(count)
+	# Check if a file was uploaded
+	if 'log_file' in request.files:
+		# Parse the uploaded log file
+		file = request.files['log_file']
+		if file and file.filename.endswith('.log'):
+			try:
+				content = file.read().decode('utf-8')
+				alerts = parse_auth_log_content(content)
+			except Exception as e:
+				return jsonify({"error": f"Failed to parse log file: {str(e)}"}), 400
+		else:
+			return jsonify({"error": "Invalid file format. Please upload a .log file."}), 400
+	else:
+		# Use existing JSON-based alert generation
+		data = request.get_json(silent=True) or {}
+		count = int(data.get("count", 5))
+		alerts = generate_alerts(count)
+	
 	alerts = process_alerts(alerts)
 	alerts = enrich_alerts(alerts)
 	alerts = run_anomaly_detection(alerts)
