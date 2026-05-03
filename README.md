@@ -15,7 +15,7 @@
   ```
 Aegis-SOC queries real threat intelligence APIs and flags confirmed malicious IPs automatically.
 It detects kill-chain attack sequences across correlated alerts.
-It automates L1 and L2 SOC triage — from alert ingestion to incident response — in a single pipeline.
+It simulates and automates core aspects of L1 and L2 SOC triage — from alert ingestion to investigation and response — in a single pipeline.
   ---
 
   ## OVERVIEW
@@ -43,6 +43,8 @@ It automates L1 and L2 SOC triage — from alert ingestion to incident response 
   [+]  Automated Response Playbooks     Step-by-step incident response for 6 attack types
   [+]  Anomaly Detection Engine         Z-score based statistical anomaly detection
   [+]  Live SOC Dashboard               Flask web dashboard with charts, alerts table, and pipeline control
+  [+]  Auth Log Ingestion              Parse real Linux auth.log files into alerts
+  [+]  Dashboard File Upload           Upload real log files through the browser UI
   [+]  Threat Intel Reclassification    Severity upgraded dynamically based on AbuseIPDB and VirusTotal scores
   [+]  Kill-Chain Sequence Detection    Identifies known attack chains across correlated alerts
   [+]  Time-Window Correlation          Flags rapid multi-alert attacks within 60 second windows
@@ -128,6 +130,10 @@ It automates L1 and L2 SOC triage — from alert ingestion to incident response 
   │   └── rule_engine.py             # Rule based classification engine
   ├── storage/
   │   └── history_store.py              # SQLite historical alert persistence
+  ├── log_parser/
+  │   └── auth_log_parser.py            # Linux auth.log parser
+  ├── sample_logs/
+  │   └── auth.log                      # Sample auth.log for testing
   ├── enrichment/
   │   └── threat_intel.py            # AbuseIPDB + VirusTotal enrichment
   ├── notifier/
@@ -198,9 +204,16 @@ It automates L1 and L2 SOC triage — from alert ingestion to incident response 
   ```bash
   python -m dashboard.app
   ```
-  Then open http://localhost:5000 in your browser.
+  ```Then open``` http://localhost:5000 ```in your browser.```
+
+  ```To logout: click the Logout button in the sidebar or visit``` http://localhost:5000/logout ```in your browser```
+
   ---
 
+  **Upload Real Logs**
+  ```bash
+  Upload a Linux auth.log file through the dashboard UI to process real log data instead of simulated alerts.
+  ```
   ## TESTING
 
   Run all 43 unit tests with:

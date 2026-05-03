@@ -1,4 +1,13 @@
 # Changelog
+## [V5.0]
+- Added kill-chain attack sequence detection across correlated alerts
+- Added time-window correlation for rapid multi-alert detection
+- Added threat intel reclassification — severity upgrades based on AbuseIPDB and VirusTotal scores
+- Added SQLite historical baseline for statistically meaningful anomaly detection
+- Added session-based dashboard authentication with styled login page
+- Added Linux auth.log parser for real log file ingestion
+- Added dashboard file upload — process real logs through the browser UI
+- Expanded unit tests from 17 to 43 across all core modules
 
 ## [V4.0]
 - Added Flask live SOC dashboard with charts and pipeline control
