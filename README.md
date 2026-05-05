@@ -64,7 +64,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   ```
   INPUT LAYER
     ├── Alert Simulator      →  10 attack vectors, synthetic alerts
-    └── Wazuh Ingestor       →  SIEM compatible ingestion
+    ├── Wazuh Ingestor       →  SIEM compatible ingestion
+    └── Auth Log Parser      →  Real Linux auth.log ingestion
 
   PROCESSING LAYER
     ├── Rule Engine          →  Severity classification (LOW/MED/HIGH/CRIT)
@@ -176,7 +177,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
 
   **Installation**
   ```bash
-  git clone https://github.com/yourusername/Aegis-SOC.git
+  git clone https://github.com/rudrasingh-007/Aegis-SOC.git
   cd Aegis-SOC
   pip install -r requirements.txt
   ```
@@ -211,9 +212,9 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   ---
 
   **Upload Real Logs**
-  ```bash
+  
   Upload a Linux auth.log file through the dashboard UI to process real log data instead of simulated alerts.
-  ```
+  
   ## TESTING
 
   Run all 43 unit tests with:
