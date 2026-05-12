@@ -9,7 +9,7 @@
 
   ```
   SYSTEM     : Automated L1 SOC Triage System
-  VERSION    : 5.0
+  VERSION    : 6.0
   STATUS     : ACTIVE
   CLEARANCE  : OPEN SOURCE
   ```
@@ -20,7 +20,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
 
   ## OVERVIEW
 
-  Aegis-SOC is a modular, open source SOC automation tool designed to automate L1 SOC triage end-to-end. The system generates or ingests alerts, applies a rule-based classification engine, and performs dual-source enrichment against AbuseIPDB and VirusTotal. Alerts receive dynamic threat-intel reclassification (severity upgrades driven by AbuseIPDB and VirusTotal scores), then flow into a statistical anomaly detector that leverages a persistent SQLite historical baseline for Z-score calculations. Correlated alerts are analyzed for rapid time-window attacks and known kill-chain sequences to reveal multi-vector campaigns. The platform supports automated email notifications for critical incidents, structured JSON and console report generation, an L2 automated investigation engine with impact assessment and isolation recommendations, and a library of response playbooks. False positives are logged for tuning, and a secured Flask dashboard with session-based authentication provides operators with controlled access and visualization.
+  Aegis-SOC is a modular, open source SOC automation tool designed to automate L1 SOC triage end-to-end. The system generates or ingests alerts, applies a rule-based classification engine, and performs dual-source enrichment against AbuseIPDB and VirusTotal. Alerts receive dynamic threat-intel reclassification, then flow into an Isolation Forest ML anomaly detector that leverages a persistent SQLite historical baseline for statistically meaningful detection. Correlated alerts are analyzed for rapid time-window attacks and known kill-chain sequences to reveal multi-vector campaigns. The platform supports automated email notifications for critical incidents, structured JSON and console report generation, an L2 automated investigation engine with impact assessment and isolation recommendations, and a library of response playbooks. False positives are logged for tuning, and a secured Flask dashboard with session-based authentication provides operators with controlled access and visualization.
 
   ---
   ## DASHBOARD PREVIEW
@@ -41,7 +41,11 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [+]  Alert Correlation                Multi-vector attack detection by source IP grouping
   [+]  Wazuh SIEM Integration           Wazuh compatible ingestion layer for live connectivity
   [+]  Automated Response Playbooks     Step-by-step incident response for 6 attack types
-  [+]  Anomaly Detection Engine         Z-score based statistical anomaly detection
+  [+]  Anomaly Detection Engine         Isolation Forest ML based anomaly detection
+  [+]  AbuseIPDB Category Extraction    Maps abuse category codes to human-readable attack types
+  [+]  File Hash Analysis               SHA256 malware hash lookup via VirusTotal
+  [+]  MITRE ATT&CK Tagging            Every alert tagged with tactic, technique ID and technique name
+  [+]  Smarter Alert Simulation         Privilege escalation only generated after brute force or failed login
   [+]  Live SOC Dashboard               Flask web dashboard with charts, alerts table, and pipeline control
   [+]  Auth Log Ingestion              Parse real Linux auth.log files into alerts
   [+]  Dashboard File Upload           Upload real log files through the browser UI
@@ -70,7 +74,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   PROCESSING LAYER
     ├── Rule Engine          →  Severity classification (LOW/MED/HIGH/CRIT)
     ├── Threat Intel         →  AbuseIPDB + VirusTotal enrichment
-    ├── Anomaly Detector     →  Z-score statistical analysis
+    ├── Anomaly Detector     →  Isolation Forest ML anomaly detection
     └── Alert Correlator     →  Multi-vector attack grouping
 
   OUTPUT LAYER
@@ -115,6 +119,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   dns_tunneling
   ```
 
+> Note: ransomware_detected alerts are most meaningful when detected as part of a kill-chain sequence. Aegis-SOC models this through kill-chain detection in the correlator module.
+
   ---
 
   ## SYSTEM STRUCTURE
@@ -152,7 +158,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   ├── l2_reports/                        # L2 investigation reports
   ├── correlation_reports/               # Correlation reports
   ├── anomaly/
-  │   └── anomaly_detector.py           # Z-score based anomaly detection
+  │   └── anomaly_detector.py           # Isolation Forest ML anomaly detection
   ├── playbooks/
   │   └── response_playbooks.py         # Automated incident response playbooks
   ├── dashboard/
@@ -231,7 +237,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [COMPLETE]  V3 — L2 automation, Wazuh SIEM integration, alert correlation
   [COMPLETE]  V4 — Dashboard UI, anomaly detection, response playbooks
   [COMPLETE]  V5 — Kill-chain detection, threat intel reclassification, SQLite baseline, dashboard auth, 43 unit tests
-  [PLANNED]   V6 — ML based detection, live SIEM feed, multi-user support
+  [COMPLETE]  V6 — MITRE ATT&CK tagging, file hash analysis, Isolation Forest ML, AbuseIPDB categories, smarter simulation
+  [PLANNED]   V7 — Apache/Nginx log parser, Suricata integration, lateral movement detection
   ```
 
   ---
