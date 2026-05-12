@@ -35,15 +35,32 @@ TARGET_SYSTEMS = [
 ]
 
 
+KNOWN_MALWARE_HASHES = [
+    '24d004a104d4d54034dbcffc2a4b19a11f39008a575aa614ea04703480b1022c',
+    '027cc450ef5f8c5f653329641ec1fed91f694e0d229928963b30f6b0d7d3a745',
+    '60ac1b794c461943a3be1e57f1de5861d00a0bff0a7636dbf8b5634db623c20f',
+    'aee20ee245900ba0b74a849bc6ebe742f5b0755e869f9bb7bf7a9d9e7d3e1e5f',
+    '0f2d6a4a7a4b9c3e5d1f8b2c7e9a6d3f1c5e8b4a2d7f9c1e3b6a8d2f4c7e9b1',
+]
+
+
 def generate_alert():
 	"""Generate and return a single simulated alert dictionary."""
+	alert_type = random.choice(ALERT_TYPES)
+	# Assign file_hash only for malware/ransomware detections
+	if alert_type in ("malware_detected", "ransomware_detected"):
+		file_hash = random.choice(KNOWN_MALWARE_HASHES)
+	else:
+		file_hash = None
+
 	return {
 		"alert_id": f"ALERT-{random.randint(100000, 999999)}",
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z"),
 		"source_ip": random.choice(SOURCE_IPS),
-		"alert_type": random.choice(ALERT_TYPES),
+		"alert_type": alert_type,
 		"target_system": random.choice(TARGET_SYSTEMS),
 		"attempt_count": random.randint(1, 25),
+		"file_hash": file_hash,
 	}
 
 

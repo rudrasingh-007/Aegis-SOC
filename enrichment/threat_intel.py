@@ -92,6 +92,35 @@ def check_ip_virustotal(ip_address):
 		return 0
 
 
+def check_file_hash_virustotal(file_hash):
+	"""Return VirusTotal malicious vote count for a file hash, or 0 on failure.
+
+	Queries the VirusTotal files endpoint and extracts
+	data.attributes.last_analysis_stats.malicious as an integer.
+	Returns 0 if file_hash is falsy or on any failure.
+	"""
+	if not file_hash:
+		return 0
+
+	headers = {
+		"x-apikey": VIRUSTOTAL_API_KEY,
+		"Accept": "application/json",
+	}
+
+	try:
+		response = requests.get(f"https://www.virustotal.com/api/v3/files/{file_hash}", headers=headers, timeout=10)
+		response.raise_for_status()
+		payload = response.json()
+		return int(
+			payload.get("data", {})
+			.get("attributes", {})
+			.get("last_analysis_stats", {})
+			.get("malicious", 0)
+		)
+	except (requests.RequestException, ValueError, TypeError):
+		return 0
+
+
 def enrich_alerts(alerts):
 	"""Enrich eligible alerts with AbuseIPDB score and threat confirmation."""
 	severities_to_check = {MEDIUM, HIGH, CRITICAL}
@@ -100,11 +129,17 @@ def enrich_alerts(alerts):
 		if alert.get("severity") in severities_to_check:
 			abuse_score, raw_categories = check_ip(alert.get("source_ip", ""))
 			virustotal_score = check_ip_virustotal(alert.get("source_ip", ""))
+			# Check file hash on VirusTotal if present
+			file_hash_score = 0
+			if alert.get("file_hash"):
+				file_hash_score = check_file_hash_virustotal(alert.get("file_hash"))
+			alert["file_hash_score"] = file_hash_score
 			alert["abuse_score"] = abuse_score
 			alert["virustotal_score"] = virustotal_score
 			alert["threat_confirmed"] = (
 				abuse_score > ABUSEIPDB_MIN_CONFIDENCE_SCORE
 				or virustotal_score > 0
+				or file_hash_score > 0
 			)
 			# Map raw category codes to human-readable names
 			mapped = []
