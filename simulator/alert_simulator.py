@@ -65,5 +65,28 @@ def generate_alert():
 
 
 def generate_alerts(count):
-	"""Generate and return a list containing `count` simulated alerts."""
-	return [generate_alert() for _ in range(count)]
+	"""Generate and return a list containing `count` simulated alerts.
+	
+	Enforces: privilege_escalation alerts only occur if a prior alert
+	from the same source_ip has alert_type of brute_force or failed_login.
+	If not, replaces privilege_escalation with brute_force.
+	"""
+	alerts = []
+	for _ in range(count):
+		alert = generate_alert()
+		
+		# Check privilege_escalation prerequisite rule
+		if alert["alert_type"] == "privilege_escalation":
+			source_ip = alert["source_ip"]
+			# Look for a prior alert from same source_ip with brute_force or failed_login
+			has_prerequisite = any(
+				a["source_ip"] == source_ip and a["alert_type"] in ("brute_force", "failed_login")
+				for a in alerts
+			)
+			# If no prerequisite exists, replace with brute_force
+			if not has_prerequisite:
+				alert["alert_type"] = "brute_force"
+		
+		alerts.append(alert)
+	
+	return alerts
