@@ -7,7 +7,7 @@ from l2_investigator.l2_engine import run_l2_investigation
 from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
 from simulator.alert_simulator import generate_alerts
-from engine.rule_engine import process_alerts, reclassify_alerts
+from engine.rule_engine import process_alerts, reclassify_alerts, tag_mitre_alerts
 from enrichment.threat_intel import enrich_alerts
 from reporter.report_generator import generate_reports
 
@@ -63,6 +63,13 @@ def main():
 		try:
 			alerts = reclassify_alerts(alerts)
 			print("[Aegis-SOC] Threat intel reclassification is done.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "mitre att&ck tagging"
+		try:
+			alerts = tag_mitre_alerts(alerts)
+			print("[Aegis-SOC] MITRE ATT&CK tagging complete.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
