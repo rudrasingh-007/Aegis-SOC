@@ -66,12 +66,12 @@ def run_anomaly_detection(alerts):
 		alert_type_frequency_mean = _safe_mean([row[2] for row in feature_matrix])
 
 		for alert, prediction, score, row in zip(alerts, predictions, scores, feature_matrix):
-			alert["is_anomaly"] = prediction == -1
+			alert["is_anomaly"] = bool(prediction == -1)
 			alert["anomaly_score"] = round(float(score), 4)
 			alert["anomaly_details"] = {
-				"attempt_count_anomaly": row[0] > attempt_count_mean,
-				"ip_frequency_anomaly": row[1] > ip_frequency_mean,
-				"alert_type_anomaly": row[2] > alert_type_frequency_mean,
+				"attempt_count_anomaly": bool(row[0] > attempt_count_mean),
+				"ip_frequency_anomaly": bool(row[1] > ip_frequency_mean),
+				"alert_type_anomaly": bool(row[2] > alert_type_frequency_mean),
 			}
 
 	anomaly_count = sum(1 for alert in alerts if alert.get("is_anomaly"))
