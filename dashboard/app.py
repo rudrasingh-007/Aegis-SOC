@@ -17,6 +17,7 @@ from flask import (
 
 from simulator.alert_simulator import generate_alerts
 from log_parser.auth_log_parser import parse_auth_log_content
+from log_parser.web_log_parser import parse_web_log_content
 from engine.rule_engine import process_alerts
 from enrichment.threat_intel import enrich_alerts
 from correlator.alert_correlator import correlate_alerts
@@ -231,7 +232,12 @@ def run_pipeline():
 		if file and file.filename.endswith('.log'):
 			try:
 				content = file.read().decode('utf-8')
-				alerts = parse_auth_log_content(content)
+				# Determine which parser to use based on filename
+				filename_lower = file.filename.lower()
+				if 'access' in filename_lower or 'web' in filename_lower:
+					alerts = parse_web_log_content(content)
+				else:
+					alerts = parse_auth_log_content(content)
 			except Exception as e:
 				return jsonify({"error": f"Failed to parse log file: {str(e)}"}), 400
 		else:

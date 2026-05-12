@@ -7,6 +7,7 @@ from l2_investigator.l2_engine import run_l2_investigation
 from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
 from simulator.alert_simulator import generate_alerts
+from log_parser.web_log_parser import parse_web_log
 from engine.rule_engine import process_alerts, reclassify_alerts, tag_mitre_alerts
 from enrichment.threat_intel import enrich_alerts
 from reporter.report_generator import generate_reports
@@ -16,6 +17,7 @@ def main():
 	"""Run the end-to-end Aegis-SOC alert processing pipeline."""
 	alerts = []
 	wazuh_alerts = []
+	web_log_alerts = []
 	current_step = "pipeline initialization"
 
 	try:
@@ -37,10 +39,17 @@ def main():
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
+		current_step = "load web log alerts"
+		try:
+			web_log_alerts = parse_web_log("sample_logs/access.log")
+			print(f"[Aegis-SOC] Loaded {len(web_log_alerts)} web log alerts into pipeline.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
 		current_step = "generate alerts"
 		try:
 			alerts = generate_alerts(5)
-			alerts = alerts + wazuh_alerts
+			alerts = alerts + wazuh_alerts + web_log_alerts
 			print("[Aegis-SOC] Alerts have been generated.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
