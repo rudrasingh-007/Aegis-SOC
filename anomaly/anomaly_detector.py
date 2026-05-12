@@ -4,15 +4,10 @@ import os
 import json
 import datetime
 import statistics
+from collections import Counter
+
+from sklearn.ensemble import IsolationForest
 from storage.history_store import save_alerts, get_historical_data
-
-
-def calculate_zscore(value, mean, standard_deviation):
-	"""Calculate and return a z-score as a float."""
-	if standard_deviation == 0:
-		return 0.0
-	return float((value - mean) / standard_deviation)
-
 
 def _safe_mean(values):
 	if not values:
@@ -20,88 +15,16 @@ def _safe_mean(values):
 	return statistics.mean(values)
 
 
-def _safe_stdev(values):
-	if len(values) < 2:
-		return 0.0
-	return statistics.stdev(values)
+def _build_frequency_maps(historical_alerts):
+	"""Build source_ip and alert_type frequency maps from historical alerts."""
+	ip_frequency = Counter()
+	alert_type_frequency = Counter()
 
+	for alert in historical_alerts:
+		ip_frequency[alert.get("source_ip", "unknown")] += 1
+		alert_type_frequency[alert.get("alert_type", "unknown")] += 1
 
-def detect_attempt_count_anomalies(alerts, baseline_alerts=None):
-	"""Flag alerts with anomalous attempt_count values using baseline data."""
-	if baseline_alerts is None:
-		baseline_alerts = alerts
-	
-	baseline_attempt_counts = [
-		alert.get("attempt_count", 0) for alert in baseline_alerts
-	]
-	mean_value = _safe_mean(baseline_attempt_counts)
-	standard_deviation = _safe_stdev(baseline_attempt_counts)
-
-	for alert in alerts:
-		attempt_count = alert.get("attempt_count", 0)
-		zscore = calculate_zscore(attempt_count, mean_value, standard_deviation)
-		alert["attempt_count_zscore"] = zscore
-		alert["attempt_count_anomaly"] = zscore > 2.0
-
-	return alerts
-
-
-def detect_ip_frequency_anomalies(alerts, baseline_alerts=None):
-	"""Flag alerts from IPs that appear with anomalous frequency using baseline data."""
-	if baseline_alerts is None:
-		baseline_alerts = alerts
-	
-	baseline_ip_counts = {}
-	for alert in baseline_alerts:
-		source_ip = alert.get("source_ip", "unknown")
-		baseline_ip_counts[source_ip] = baseline_ip_counts.get(source_ip, 0) + 1
-
-	counts = list(baseline_ip_counts.values())
-	mean_value = _safe_mean(counts)
-	standard_deviation = _safe_stdev(counts)
-
-	ip_scores = {
-		source_ip: calculate_zscore(count, mean_value, standard_deviation)
-		for source_ip, count in baseline_ip_counts.items()
-	}
-
-	for alert in alerts:
-		source_ip = alert.get("source_ip", "unknown")
-		zscore = ip_scores.get(source_ip, 0.0)
-		alert["ip_frequency_zscore"] = zscore
-		alert["ip_frequency_anomaly"] = zscore > 2.0
-
-	return alerts
-
-
-def detect_alert_type_anomalies(alerts, baseline_alerts=None):
-	"""Flag alerts whose type appears with anomalous frequency using baseline data."""
-	if baseline_alerts is None:
-		baseline_alerts = alerts
-	
-	baseline_alert_type_counts = {}
-	for alert in baseline_alerts:
-		alert_type = alert.get("alert_type", "unknown")
-		baseline_alert_type_counts[alert_type] = (
-			baseline_alert_type_counts.get(alert_type, 0) + 1
-		)
-
-	counts = list(baseline_alert_type_counts.values())
-	mean_value = _safe_mean(counts)
-	standard_deviation = _safe_stdev(counts)
-
-	alert_type_scores = {
-		alert_type: calculate_zscore(count, mean_value, standard_deviation)
-		for alert_type, count in baseline_alert_type_counts.items()
-	}
-
-	for alert in alerts:
-		alert_type = alert.get("alert_type", "unknown")
-		zscore = alert_type_scores.get(alert_type, 0.0)
-		alert["alert_type_zscore"] = zscore
-		alert["alert_type_anomaly"] = zscore > 2.0
-
-	return alerts
+	return ip_frequency, alert_type_frequency
 
 
 def run_anomaly_detection(alerts):
@@ -111,29 +34,53 @@ def run_anomaly_detection(alerts):
 	
 	# Retrieve all historical alerts as baseline
 	historical_alerts = get_historical_data()
-	
-	# Run detectors using historical data as baseline
-	detect_attempt_count_anomalies(alerts, baseline_alerts=historical_alerts)
-	detect_ip_frequency_anomalies(alerts, baseline_alerts=historical_alerts)
-	detect_alert_type_anomalies(alerts, baseline_alerts=historical_alerts)
 
-	attempt_count_anomalies = sum(
-		1 for alert in alerts if alert.get("attempt_count_anomaly")
-	)
-	ip_frequency_anomalies = sum(
-		1 for alert in alerts if alert.get("ip_frequency_anomaly")
-	)
-	alert_type_anomalies = sum(
-		1 for alert in alerts if alert.get("alert_type_anomaly")
-	)
+	# Build historical frequency maps for feature extraction
+	ip_frequency_map, alert_type_frequency_map = _build_frequency_maps(historical_alerts)
+
+	feature_matrix = []
+	for alert in alerts:
+		attempt_count = int(alert.get("attempt_count", 0) or 0)
+		source_ip = alert.get("source_ip", "unknown")
+		alert_type = alert.get("alert_type", "unknown")
+		ip_frequency = int(ip_frequency_map.get(source_ip, 0))
+		alert_type_frequency = int(alert_type_frequency_map.get(alert_type, 0))
+		feature_matrix.append([attempt_count, ip_frequency, alert_type_frequency])
+
+	if len(alerts) < 2:
+		for alert in alerts:
+			alert["is_anomaly"] = False
+			alert["anomaly_score"] = 0.0
+			alert["anomaly_details"] = {
+				"attempt_count_anomaly": False,
+				"ip_frequency_anomaly": False,
+				"alert_type_anomaly": False,
+			}
+	else:
+		model = IsolationForest(contamination=0.1, random_state=42)
+		predictions = model.fit_predict(feature_matrix)
+		scores = model.decision_function(feature_matrix)
+
+		attempt_count_mean = _safe_mean([row[0] for row in feature_matrix])
+		ip_frequency_mean = _safe_mean([row[1] for row in feature_matrix])
+		alert_type_frequency_mean = _safe_mean([row[2] for row in feature_matrix])
+
+		for alert, prediction, score, row in zip(alerts, predictions, scores, feature_matrix):
+			alert["is_anomaly"] = prediction == -1
+			alert["anomaly_score"] = round(float(score), 4)
+			alert["anomaly_details"] = {
+				"attempt_count_anomaly": row[0] > attempt_count_mean,
+				"ip_frequency_anomaly": row[1] > ip_frequency_mean,
+				"alert_type_anomaly": row[2] > alert_type_frequency_mean,
+			}
+
+	anomaly_count = sum(1 for alert in alerts if alert.get("is_anomaly"))
 
 	report = {
 		"generated_at": datetime.datetime.utcnow().isoformat() + "Z",
 		"total_alerts": len(alerts),
 		"summary": {
-			"attempt_count_anomalies": attempt_count_anomalies,
-			"ip_frequency_anomalies": ip_frequency_anomalies,
-			"alert_type_anomalies": alert_type_anomalies,
+			"anomalous_alerts": anomaly_count,
 		},
 		"alerts": alerts,
 	}
@@ -150,9 +97,7 @@ def run_anomaly_detection(alerts):
 	print("=" * 60)
 	print("Aegis-SOC Anomaly Detection Summary")
 	print("=" * 60)
-	print(f"Attempt Count Anomalies: {attempt_count_anomalies}")
-	print(f"IP Frequency Anomalies: {ip_frequency_anomalies}")
-	print(f"Alert Type Anomalies: {alert_type_anomalies}")
+	print(f"Anomalous Alerts: {anomaly_count}")
 	print(f"Report Saved To: {report_path}")
 	print("=" * 60)
 
