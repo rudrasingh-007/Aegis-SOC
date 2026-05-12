@@ -1,4 +1,12 @@
 # Changelog
+## [V6.0]
+- Added AbuseIPDB attack category extraction - maps numeric category codes to human-readable abuse types
+- Added file hash analysis via VirusTotal - malware and ransomware alerts now carry real SHA256 hashes checked against VirusTotal
+- Added MITRE ATT&CK tagging - every alert is tagged with tactic, technique ID, and technique name
+- Added privilege escalation prerequisite logic to alert simulator - escalation only follows brute force or failed login
+- Replaced Z-score anomaly detection with Isolation Forest ML model for improved accuracy
+- Added scikit-learn to dependencies
+
 ## [V5.0]
 - Added kill-chain attack sequence detection across correlated alerts
 - Added time-window correlation for rapid multi-alert detection
