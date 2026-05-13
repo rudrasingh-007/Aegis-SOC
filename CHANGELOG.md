@@ -1,4 +1,11 @@
 # Changelog
+## [V7.0]
+- Added Apache/Nginx web log parser - detects brute force, SQL injection, and sensitive path reconnaissance
+- Added Suricata EVE JSON log parser - converts NIDS alerts directly into pipeline alerts
+- Added lateral movement detection module - flags attackers escalating across multiple target systems
+- Added dashboard support for web log and Suricata file uploads
+- Expanded unit tests from 43 to 58 across all core modules
+
 ## [V6.0]
 - Added AbuseIPDB attack category extraction - maps numeric category codes to human-readable abuse types
 - Added file hash analysis via VirusTotal - malware and ransomware alerts now carry real SHA256 hashes checked against VirusTotal
