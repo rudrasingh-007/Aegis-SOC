@@ -9,7 +9,7 @@
 
   ```
   SYSTEM     : Automated L1 SOC Triage System
-  VERSION    : 6.0
+  VERSION    : 7.0
   STATUS     : ACTIVE
   CLEARANCE  : OPEN SOURCE
   ```
@@ -54,7 +54,10 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [+]  Time-Window Correlation          Flags rapid multi-alert attacks within 60 second windows
   [+]  SQLite Historical Baseline       Persistent alert history for statistically meaningful anomaly detection
   [+]  Dashboard Authentication         Session-based login with environment configured credentials
-  [+]  43 Automated Unit Tests          43 automated unit tests across core modules
+  [+]  58 Automated Unit Tests          58 automated unit tests across core modules
+  [+]  Apache/Nginx Log Parser          Detects brute force, SQL injection, and path reconnaissance from web logs
+  [+]  Suricata NIDS Integration         Parses Suricata EVE JSON alerts directly into the pipeline
+  [+]  Lateral Movement Detection        Flags attackers escalating across multiple target systems
   ```
 
   ## THREAT PIPELINE
@@ -69,7 +72,9 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   INPUT LAYER
     ├── Alert Simulator      →  10 attack vectors, synthetic alerts
     ├── Wazuh Ingestor       →  SIEM compatible ingestion
-    └── Auth Log Parser      →  Real Linux auth.log ingestion
+    ├── Auth Log Parser      →  Real Linux auth.log ingestion
+    ├── Web Log Parser       →  Apache/Nginx access log ingestion
+    └── Suricata Parser      →  NIDS EVE JSON alert ingestion
 
   PROCESSING LAYER
     ├── Rule Engine          →  Severity classification (LOW/MED/HIGH/CRIT)
@@ -138,9 +143,13 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   ├── storage/
   │   └── history_store.py              # SQLite historical alert persistence
   ├── log_parser/
-  │   └── auth_log_parser.py            # Linux auth.log parser
+  │   ├── auth_log_parser.py            # Linux auth.log parser
+  │   ├── web_log_parser.py             # Apache/Nginx access log parser
+  │   └── suricata_parser.py            # Suricata EVE JSON log parser
   ├── sample_logs/
-  │   └── auth.log                      # Sample auth.log for testing
+  │   ├── auth.log                      # Sample auth.log for testing
+  │   ├── access.log                    # Sample Apache/Nginx log for testing
+  │   └── suricata.json                 # Sample Suricata EVE JSON log for testing
   ├── enrichment/
   │   └── threat_intel.py            # AbuseIPDB + VirusTotal enrichment
   ├── notifier/
@@ -157,6 +166,9 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   │   └── wazuh_ingestor.py             # Wazuh SIEM ingestion layer
   ├── l2_reports/                        # L2 investigation reports
   ├── correlation_reports/               # Correlation reports
+  ├── lateral_movement/
+  │   └── lateral_detector.py           # Lateral movement detection module
+  ├── lateral_movement_reports/          # Lateral movement detection reports
   ├── anomaly/
   │   └── anomaly_detector.py           # Isolation Forest ML anomaly detection
   ├── playbooks/
@@ -223,7 +235,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   
   ## TESTING
 
-  Run all 43 unit tests with:
+  Run all 58 unit tests with:
   ```bash
   python -m pytest tests/ -v
   ```
@@ -238,7 +250,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [COMPLETE]  V4 — Dashboard UI, anomaly detection, response playbooks
   [COMPLETE]  V5 — Kill-chain detection, threat intel reclassification, SQLite baseline, dashboard auth, 43 unit tests
   [COMPLETE]  V6 — MITRE ATT&CK tagging, file hash analysis, Isolation Forest ML, AbuseIPDB categories, smarter simulation
-  [PLANNED]   V7 — Apache/Nginx log parser, Suricata integration, lateral movement detection
+  [COMPLETE]  V7 — Web log parser, Suricata NIDS integration, lateral movement detection, 58 unit tests
+  [PLANNED]   V8 — False positive ticketing, executable playbooks, multi-user dashboard
   ```
 
   ---
