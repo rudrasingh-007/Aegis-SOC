@@ -3,6 +3,7 @@ from anomaly.anomaly_detector import run_anomaly_detection
 from playbooks.response_playbooks import run_playbooks
 from integrations.wazuh_ingestor import generate_sample_wazuh_alerts, load_wazuh_alerts_from_file
 from correlator.alert_correlator import correlate_alerts
+from lateral_movement.lateral_detector import detect_lateral_movement
 from l2_investigator.l2_engine import run_l2_investigation
 from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
@@ -102,6 +103,13 @@ def main():
 		try:
 			correlate_alerts(alerts)
 			print("[Aegis-SOC] Alert correlation complete.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "lateral movement detection"
+		try:
+			alerts = detect_lateral_movement(alerts)
+			print("[Aegis-SOC] Lateral movement detection complete.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 

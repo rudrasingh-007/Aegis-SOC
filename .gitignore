@@ -7,4 +7,5 @@ l2_reports/
 correlation_reports/
 anomaly_reports/
 playbook_executions/
+lateral_movement_reports/
 aegis_history.db
