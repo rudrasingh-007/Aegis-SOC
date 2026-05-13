@@ -8,6 +8,7 @@ from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
 from simulator.alert_simulator import generate_alerts
 from log_parser.web_log_parser import parse_web_log
+from log_parser.suricata_parser import parse_suricata_log
 from engine.rule_engine import process_alerts, reclassify_alerts, tag_mitre_alerts
 from enrichment.threat_intel import enrich_alerts
 from reporter.report_generator import generate_reports
@@ -18,6 +19,7 @@ def main():
 	alerts = []
 	wazuh_alerts = []
 	web_log_alerts = []
+	suricata_alerts = []
 	current_step = "pipeline initialization"
 
 	try:
@@ -46,10 +48,17 @@ def main():
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
+		current_step = "load suricata alerts"
+		try:
+			suricata_alerts = parse_suricata_log("sample_logs/suricata.json")
+			print(f"[Aegis-SOC] Loaded {len(suricata_alerts)} Suricata alerts into pipeline.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
 		current_step = "generate alerts"
 		try:
 			alerts = generate_alerts(5)
-			alerts = alerts + wazuh_alerts + web_log_alerts
+			alerts = alerts + wazuh_alerts + web_log_alerts + suricata_alerts
 			print("[Aegis-SOC] Alerts have been generated.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")

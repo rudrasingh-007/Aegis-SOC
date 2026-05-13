@@ -18,6 +18,7 @@ from flask import (
 from simulator.alert_simulator import generate_alerts
 from log_parser.auth_log_parser import parse_auth_log_content
 from log_parser.web_log_parser import parse_web_log_content
+from log_parser.suricata_parser import parse_suricata_log_content
 from engine.rule_engine import process_alerts
 from enrichment.threat_intel import enrich_alerts
 from correlator.alert_correlator import correlate_alerts
@@ -234,7 +235,9 @@ def run_pipeline():
 				content = file.read().decode('utf-8')
 				# Determine which parser to use based on filename
 				filename_lower = file.filename.lower()
-				if 'access' in filename_lower or 'web' in filename_lower:
+				if 'suricata' in filename_lower:
+					alerts = parse_suricata_log_content(content)
+				elif 'access' in filename_lower or 'web' in filename_lower:
 					alerts = parse_web_log_content(content)
 				else:
 					alerts = parse_auth_log_content(content)
