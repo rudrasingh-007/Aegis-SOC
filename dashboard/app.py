@@ -26,6 +26,7 @@ from anomaly.anomaly_detector import run_anomaly_detection
 from l2_investigator.l2_engine import run_l2_investigation
 from playbooks.response_playbooks import run_playbooks
 from logger.false_positive_logger import log_false_positives
+from ticketing.ticket_manager import get_all_tickets, close_ticket
 from integrations.wazuh_ingestor import (
 	generate_sample_wazuh_alerts,
 	load_wazuh_alerts_from_file,
@@ -298,6 +299,29 @@ def run_pipeline():
 			"summary": summary,
 		}
 	)
+
+
+@app.route("/tickets", methods=["GET"])
+def tickets():
+	"""Return all tickets as JSON."""
+	if session.get('logged_in') is not True:
+		return jsonify({'error': 'Unauthorized'}), 401
+	return jsonify(get_all_tickets())
+
+
+@app.route("/tickets/close", methods=["POST"])
+def close_ticket_route():
+	"""Close a ticket from the dashboard."""
+	if session.get('logged_in') is not True:
+		return jsonify({'error': 'Unauthorized'}), 401
+	data = request.get_json() or {}
+	ticket_id = data.get("ticket_id")
+	closure_reason = data.get("closure_reason")
+
+	if close_ticket(ticket_id, closure_reason):
+		return jsonify({"success": True})
+
+	return jsonify({"success": False})
 
 
 @app.route("/health")

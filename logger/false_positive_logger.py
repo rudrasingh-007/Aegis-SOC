@@ -4,6 +4,8 @@ import os
 import json
 import datetime
 
+from ticketing.ticket_manager import create_ticket
+
 
 LOG_FOLDER = "logs"
 LOG_FILE = os.path.join(LOG_FOLDER, "false_positives.json")
@@ -35,6 +37,8 @@ def log_false_positive(alert):
 
 	with open(LOG_FILE, "w", encoding="utf-8") as log_file:
 		json.dump(existing_alerts, log_file, indent=2)
+
+	create_ticket(alert)
 
 
 def log_false_positives(alerts):

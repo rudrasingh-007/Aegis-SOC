@@ -501,6 +501,10 @@
             color: var(--text-muted);
         }
 
+        .status-open { color: #fecaca; background: rgba(239, 68, 68, 0.2); }
+        .status-in-progress { color: #fcd34d; background: rgba(245, 158, 11, 0.2); }
+        .status-closed { color: #86efac; background: rgba(34, 197, 94, 0.2); }
+
         @media (max-width: 1280px) {
             .metric-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -678,6 +682,29 @@
                     <div id="pipelineStatusList" class="pipeline-list"></div>
                 </div>
             </section>
+
+            <section class="panel" style="margin-top: 14px;" id="section-tickets">
+                <h2 class="panel-title">False Positive Tickets</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Alert ID</th>
+                                <th>Source IP</th>
+                                <th>Alert Type</th>
+                                <th>Severity</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketsTableBody">
+                            <tr><td colspan="8" class="muted">No tickets available.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -709,6 +736,8 @@
         const sectionCharts = document.getElementById("section-charts");
         const sectionAlerts = document.getElementById("section-alerts");
         const sectionBottom = document.getElementById("section-bottom");
+        const sectionTickets = document.getElementById("section-tickets");
+        const ticketsTableBody = document.getElementById("ticketsTableBody");
 
         let allAlerts = [];
         let correlationResults = [];
@@ -853,6 +882,91 @@
             return "badge sev-low";
         }
 
+        function getStatusBadgeClass(status) {
+            if (status === "OPEN") return "badge status-open";
+            if (status === "IN_PROGRESS") return "badge status-in-progress";
+            return "badge status-closed";
+        }
+
+        async function loadTickets() {
+            try {
+                const response = await fetch("/tickets", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        ticketsTableBody.innerHTML = '<tr><td colspan="8" class="muted">Unauthorized. Please log in.</td></tr>';
+                    } else {
+                        throw new Error(`Request failed with status ${response.status}`);
+                    }
+                    return;
+                }
+
+                const tickets = await response.json();
+                if (!tickets.length) {
+                    ticketsTableBody.innerHTML = '<tr><td colspan="8" class="muted">No tickets available.</td></tr>';
+                    return;
+                }
+
+                ticketsTableBody.innerHTML = tickets
+                    .map((ticket) => {
+                        let actionHtml = "–";
+                        if (ticket.status === "OPEN") {
+                            actionHtml = `<button onclick="handleCloseTicket('${ticket.ticket_id}')" style="background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem;">Close</button>`;
+                        }
+                        return `
+                            <tr>
+                                <td>${ticket.ticket_id || "N/A"}</td>
+                                <td>${ticket.alert_id || "N/A"}</td>
+                                <td>${ticket.source_ip || "N/A"}</td>
+                                <td>${ticket.alert_type || "N/A"}</td>
+                                <td><span class="${getSeverityBadgeClass(ticket.severity)}">${ticket.severity || "LOW"}</span></td>
+                                <td><span class="${getStatusBadgeClass(ticket.status)}">${ticket.status || "OPEN"}</span></td>
+                                <td>${ticket.created_at || "N/A"}</td>
+                                <td>${actionHtml}</td>
+                            </tr>
+                        `;
+                    })
+                    .join("");
+            } catch (error) {
+                console.error("Error loading tickets:", error);
+                ticketsTableBody.innerHTML = '<tr><td colspan="8" class="muted">Error loading tickets. Please try again.</td></tr>';
+            }
+        }
+
+        async function handleCloseTicket(ticketId) {
+            const reason = prompt("Enter closure reason:");
+            if (reason === null) return;
+
+            try {
+                const response = await fetch("/tickets/close", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ticket_id: ticketId,
+                        closure_reason: reason,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    alert("Ticket closed successfully.");
+                    await loadTickets();
+                } else {
+                    alert("Failed to close ticket.");
+                }
+            } catch (error) {
+                console.error("Error closing ticket:", error);
+                alert("Error closing ticket. Please try again.");
+            }
+        }
+
         function isAnomalous(alert) {
             return Boolean(
                 alert.attempt_count_anomaly || alert.ip_frequency_anomaly || alert.alert_type_anomaly
@@ -947,6 +1061,7 @@
                 sectionCharts.style.display = "grid";
                 sectionAlerts.style.display = "block";
                 sectionBottom.style.display = "grid";
+                sectionTickets.style.display = "none";
                 return;
             }
 
@@ -955,6 +1070,7 @@
                 sectionCharts.style.display = "none";
                 sectionAlerts.style.display = "block";
                 sectionBottom.style.display = "none";
+                sectionTickets.style.display = "none";
                 return;
             }
 
@@ -963,6 +1079,7 @@
                 sectionCharts.style.display = "none";
                 sectionAlerts.style.display = "none";
                 sectionBottom.style.display = "grid";
+                sectionTickets.style.display = "block";
             }
         }
 
@@ -1054,6 +1171,7 @@
         initializePipelineStatus();
         clearDashboard();
         setSidebarView("dashboard");
+        loadTickets();
     </script>
 </body>
 </html>
