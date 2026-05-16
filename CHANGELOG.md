@@ -1,4 +1,10 @@
 # Changelog
+## [V8.0]
+- Added false positive ticketing system — auto-creates SQLite tickets for every false positive with OPEN/IN_PROGRESS/CLOSED workflow
+- Added multi-user dashboard with role-based access — admin and analyst roles, SHA-256 password hashing, user management UI
+- Added executable playbook logging — every playbook step now records SIMULATED status with timestamp and execution summary
+- Expanded unit tests from 58 to 68 across all core modules
+
 ## [V7.0]
 - Added Apache/Nginx web log parser - detects brute force, SQL injection, and sensitive path reconnaissance
 - Added Suricata EVE JSON log parser - converts NIDS alerts directly into pipeline alerts
