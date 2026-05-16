@@ -102,11 +102,30 @@ def execute_playbook(alert):
 	"""Print and save a playbook execution for a single alert."""
 	alert_type = alert.get("alert_type", "unknown")
 	playbook = get_playbook(alert_type)
+	step_results = []
+	for step in playbook["steps"]:
+		step_results.append(
+			{
+				"step": step,
+				"status": "SIMULATED",
+				"executed_at": datetime.datetime.utcnow().isoformat(),
+			}
+		)
+
+	summary = {
+		"total_steps": len(playbook["steps"]),
+		"simulated": sum(1 for step_result in step_results if step_result["status"] == "SIMULATED"),
+		"executed": sum(1 for step_result in step_results if step_result["status"] == "EXECUTED"),
+		"failed": sum(1 for step_result in step_results if step_result["status"] == "FAILED"),
+		"outcome": "ALL STEPS SIMULATED — No live execution environment connected",
+	}
 
 	execution = {
 		"executed_at": datetime.datetime.utcnow().isoformat() + "Z",
 		"alert": alert,
 		"playbook": playbook,
+		"step_results": step_results,
+		"summary": summary,
 	}
 
 	output_folder = "playbook_executions"
@@ -128,8 +147,8 @@ def execute_playbook(alert):
 	print(f"Playbook: {playbook['name']}")
 	print(f"Description: {playbook['description']}")
 	print("Steps:")
-	for step in playbook["steps"]:
-		print(f"  - {step}")
+	for step_result in step_results:
+		print(f"  [{step_result['status']}] {step_result['step']}")
 	print(f"Execution Saved To: {output_path}")
 	print("=" * 60)
 
