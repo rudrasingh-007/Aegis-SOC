@@ -505,6 +505,39 @@
         .status-in-progress { color: #fcd34d; background: rgba(245, 158, 11, 0.2); }
         .status-closed { color: #86efac; background: rgba(34, 197, 94, 0.2); }
 
+        .users-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .users-header h2 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #dbeafe;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding-left: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .create-user-btn {
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #2563eb, #0ea5e9);
+            color: #ffffff;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .create-user-btn:hover {
+            filter: brightness(1.05);
+        }
+
         @media (max-width: 1280px) {
             .metric-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -568,6 +601,9 @@
                 <div class="nav-item active" data-nav="dashboard"><span class="nav-icon">D</span>Dashboard</div>
                 <div class="nav-item" data-nav="alerts"><span class="nav-icon">A</span>Alerts</div>
                 <div class="nav-item" data-nav="reports"><span class="nav-icon">R</span>Reports</div>
+                {% if session.get("role", "") == "admin" %}
+                <div class="nav-item" data-nav="users"><span class="nav-icon">U</span>Users</div>
+                {% endif %}
             </nav>
             <div class="sidebar-divider"></div>
 
@@ -705,10 +741,34 @@
                     </table>
                 </div>
             </section>
+
+            <section class="panel" style="margin-top: 14px; display: none;" id="section-users">
+                <div class="users-header">
+                    <h2>User Management</h2>
+                    <button type="button" class="create-user-btn" onclick="handleCreateUser()">Create User</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="4" class="muted">No users available.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
     <script>
+        const userRole = '{{ session.get("role", "") }}';
+
         const STAGES = [
             "SIMULATOR",
             "RULE ENGINE",
@@ -737,7 +797,9 @@
         const sectionAlerts = document.getElementById("section-alerts");
         const sectionBottom = document.getElementById("section-bottom");
         const sectionTickets = document.getElementById("section-tickets");
+        const sectionUsers = document.getElementById("section-users");
         const ticketsTableBody = document.getElementById("ticketsTableBody");
+        const usersTableBody = document.getElementById("usersTableBody");
 
         let allAlerts = [];
         let correlationResults = [];
@@ -967,6 +1029,104 @@
             }
         }
 
+        async function loadUsers() {
+            if (userRole !== "admin" || !usersTableBody) {
+                return;
+            }
+
+            try {
+                const response = await fetch("/users", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        usersTableBody.innerHTML = '<tr><td colspan="4" class="muted">Unauthorized. Please log in as an admin.</td></tr>';
+                    } else {
+                        throw new Error(`Request failed with status ${response.status}`);
+                    }
+                    return;
+                }
+
+                const users = await response.json();
+                if (!users.length) {
+                    usersTableBody.innerHTML = '<tr><td colspan="4" class="muted">No users available.</td></tr>';
+                    return;
+                }
+
+                usersTableBody.innerHTML = users
+                    .map((user) => `
+                        <tr>
+                            <td>${user.username || "N/A"}</td>
+                            <td><span class="badge ${user.role === "admin" ? "sev-critical" : "sev-low"}">${user.role || "N/A"}</span></td>
+                            <td>${user.created_at || "N/A"}</td>
+                            <td>
+                                <button type="button" onclick="handleDeleteUser('${user.username}')" style="background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: 700; font-size: 0.8rem;">Delete</button>
+                            </td>
+                        </tr>
+                    `)
+                    .join("");
+            } catch (error) {
+                console.error("Error loading users:", error);
+                usersTableBody.innerHTML = '<tr><td colspan="4" class="muted">Error loading users. Please try again.</td></tr>';
+            }
+        }
+
+        async function handleDeleteUser(username) {
+            if (!confirm(`Delete user ${username}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch("/users/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username }),
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    await loadUsers();
+                } else {
+                    alert(result.error || "Cannot delete user");
+                }
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert("Cannot delete user");
+            }
+        }
+
+        async function handleCreateUser() {
+            const username = prompt("Enter username:");
+            if (!username) return;
+
+            const password = prompt("Enter password:");
+            if (!password) return;
+
+            const role = prompt("Enter role (admin or analyst):");
+            if (!role) return;
+
+            try {
+                const response = await fetch("/users/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password, role }),
+                });
+
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert("User created successfully.");
+                    await loadUsers();
+                } else {
+                    alert(result.error || "Failed to create user.");
+                }
+            } catch (error) {
+                console.error("Error creating user:", error);
+                alert("Failed to create user.");
+            }
+        }
+
         function isAnomalous(alert) {
             return Boolean(
                 alert.attempt_count_anomaly || alert.ip_frequency_anomaly || alert.alert_type_anomaly
@@ -1062,6 +1222,7 @@
                 sectionAlerts.style.display = "block";
                 sectionBottom.style.display = "grid";
                 sectionTickets.style.display = "none";
+                if (sectionUsers) sectionUsers.style.display = "none";
                 return;
             }
 
@@ -1071,6 +1232,7 @@
                 sectionAlerts.style.display = "block";
                 sectionBottom.style.display = "none";
                 sectionTickets.style.display = "none";
+                if (sectionUsers) sectionUsers.style.display = "none";
                 return;
             }
 
@@ -1080,6 +1242,17 @@
                 sectionAlerts.style.display = "none";
                 sectionBottom.style.display = "grid";
                 sectionTickets.style.display = "block";
+                if (sectionUsers) sectionUsers.style.display = "none";
+                return;
+            }
+
+            if (view === "users") {
+                sectionDashboard.style.display = "none";
+                sectionCharts.style.display = "none";
+                sectionAlerts.style.display = "none";
+                sectionBottom.style.display = "none";
+                sectionTickets.style.display = "none";
+                if (sectionUsers) sectionUsers.style.display = "block";
             }
         }
 
@@ -1172,6 +1345,9 @@
         clearDashboard();
         setSidebarView("dashboard");
         loadTickets();
+        if (userRole === "admin") {
+            loadUsers();
+        }
     </script>
 </body>
 </html>

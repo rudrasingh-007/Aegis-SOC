@@ -27,6 +27,7 @@ from l2_investigator.l2_engine import run_l2_investigation
 from playbooks.response_playbooks import run_playbooks
 from logger.false_positive_logger import log_false_positives
 from ticketing.ticket_manager import get_all_tickets, close_ticket
+from auth.user_manager import authenticate_user, get_all_users, create_user, delete_user
 from integrations.wazuh_ingestor import (
 	generate_sample_wazuh_alerts,
 	load_wazuh_alerts_from_file,
@@ -60,11 +61,11 @@ def login():
 	if request.method == "POST":
 		username = request.form.get("username", "")
 		password = request.form.get("password", "")
-		if (
-			username == DASHBOARD_USERNAME
-			and password == DASHBOARD_PASSWORD
-		):
+		user = authenticate_user(username, password)
+		if user:
 			session["logged_in"] = True
+			session["username"] = user["username"]
+			session["role"] = user["role"]
 			return redirect(url_for("index"))
 		else:
 			error = "Invalid username or password"
@@ -322,6 +323,44 @@ def close_ticket_route():
 		return jsonify({"success": True})
 
 	return jsonify({"success": False})
+
+
+@app.route("/users", methods=["GET"])
+def users():
+	"""Return all users as JSON for admin users."""
+	if session.get('logged_in') is not True or session.get('role') != 'admin':
+		return jsonify({'error': 'Unauthorized'}), 401
+	return jsonify(get_all_users())
+
+
+@app.route("/users/create", methods=["POST"])
+def create_user_route():
+	"""Create a new user for admin users."""
+	if session.get('logged_in') is not True or session.get('role') != 'admin':
+		return jsonify({'error': 'Unauthorized'}), 401
+	data = request.get_json() or {}
+	username = data.get("username")
+	password = data.get("password")
+	role = data.get("role")
+
+	if create_user(username, password, role):
+		return jsonify({"success": True})
+
+	return jsonify({"success": False, "error": "Username already exists"})
+
+
+@app.route("/users/delete", methods=["POST"])
+def delete_user_route():
+	"""Delete a user for admin users."""
+	if session.get('logged_in') is not True or session.get('role') != 'admin':
+		return jsonify({'error': 'Unauthorized'}), 401
+	data = request.get_json() or {}
+	username = data.get("username")
+
+	if delete_user(username):
+		return jsonify({"success": True})
+
+	return jsonify({"success": False, "error": "Cannot delete user"})
 
 
 @app.route("/health")
