@@ -9,7 +9,7 @@
 
   ```
   SYSTEM     : Automated L1 SOC Triage System
-  VERSION    : 7.0
+  VERSION    : 8.0
   STATUS     : ACTIVE
   CLEARANCE  : OPEN SOURCE
   ```
@@ -54,7 +54,10 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [+]  Time-Window Correlation          Flags rapid multi-alert attacks within 60 second windows
   [+]  SQLite Historical Baseline       Persistent alert history for statistically meaningful anomaly detection
   [+]  Dashboard Authentication         Session-based login with environment configured credentials
-  [+]  58 Automated Unit Tests          58 automated unit tests across core modules
+  [+]  False Positive Ticketing         Auto-creates SQLite tickets with OPEN/IN_PROGRESS/CLOSED workflow
+  [+]  Multi-User Dashboard             Admin and analyst roles with SHA-256 password hashing and user management
+  [+]  Executable Playbook Logging      Every playbook step records SIMULATED status with timestamp and execution summary
+  [+]  68 Automated Unit Tests          68 automated unit tests across core modules
   [+]  Apache/Nginx Log Parser          Detects brute force, SQL injection, and path reconnaissance from web logs
   [+]  Suricata NIDS Integration         Parses Suricata EVE JSON alerts directly into the pipeline
   [+]  Lateral Movement Detection        Flags attackers escalating across multiple target systems
@@ -142,6 +145,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   │   └── rule_engine.py             # Rule based classification engine
   ├── storage/
   │   └── history_store.py              # SQLite historical alert persistence
+  ├── auth/
+  │   └── user_manager.py               # Multi-user authentication and role management
   ├── log_parser/
   │   ├── auth_log_parser.py            # Linux auth.log parser
   │   ├── web_log_parser.py             # Apache/Nginx access log parser
@@ -158,6 +163,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   │   └── report_generator.py        # Incident report generation
   ├── logger/
   │   └── false_positive_logger.py   # False positive registry
+  ├── ticketing/
+  │   └── ticket_manager.py             # False positive ticket lifecycle management
   ├── l2_investigator/
   │   └── l2_engine.py                  # L2 automated investigation engine
   ├── correlator/
@@ -235,7 +242,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   
   ## TESTING
 
-  Run all 58 unit tests with:
+  Run all 68 unit tests with:
   ```bash
   python -m pytest tests/ -v
   ```
@@ -251,7 +258,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [COMPLETE]  V5 — Kill-chain detection, threat intel reclassification, SQLite baseline, dashboard auth, 43 unit tests
   [COMPLETE]  V6 — MITRE ATT&CK tagging, file hash analysis, Isolation Forest ML, AbuseIPDB categories, smarter simulation
   [COMPLETE]  V7 — Web log parser, Suricata NIDS integration, lateral movement detection, 58 unit tests
-  [PLANNED]   V8 — False positive ticketing, executable playbooks, multi-user dashboard
+  [COMPLETE]  V8 — False positive ticketing, multi-user dashboard, executable playbook logging, 68 unit tests
+  [PLANNED]   V9 — Live SIEM feed, WebSocket dashboard updates, threat hunting module
   ```
 
   ---
