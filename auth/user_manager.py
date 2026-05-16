@@ -1,6 +1,6 @@
 import os
 import sqlite3
-import hashlib
+import bcrypt
 from datetime import datetime
 
 
@@ -8,7 +8,7 @@ DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "aegis_histor
 
 
 def hash_password(password):
-	return hashlib.sha256(password.encode()).hexdigest()
+	return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def get_connection():
@@ -59,7 +59,6 @@ def create_user(username, password, role):
 
 def authenticate_user(username, password):
 	try:
-		password_hash = hash_password(password)
 
 		with get_connection() as conn:
 			conn.row_factory = sqlite3.Row
@@ -69,7 +68,7 @@ def authenticate_user(username, password):
 				(username,),
 			)
 			row = cursor.fetchone()
-			if row and row["password_hash"] == password_hash:
+			if row and bcrypt.checkpw(password.encode(), row["password_hash"].encode()):
 				return {"username": row["username"], "role": row["role"]}
 			return None
 	except Exception as error:
