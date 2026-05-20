@@ -90,6 +90,7 @@ def _bump_severity(severity, levels):
 
 def reclassify_with_threat_intel(alert):
 	"""Reclassify severity upward using threat intel scores."""
+	alert["original_severity"] = alert.get("severity")
 	severity = alert.get("severity", LOW)
 	abuse_score = alert.get("abuse_score", 0)
 	virustotal_score = alert.get("virustotal_score", 0)

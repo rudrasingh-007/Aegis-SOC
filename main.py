@@ -1,4 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
+from explainability.explainer import explain_alerts
 from anomaly.anomaly_detector import run_anomaly_detection
 from playbooks.response_playbooks import run_playbooks
 from integrations.wazuh_ingestor import generate_sample_wazuh_alerts, load_wazuh_alerts_from_file
@@ -110,6 +111,13 @@ def main():
 		try:
 			alerts = detect_lateral_movement(alerts)
 			print("[Aegis-SOC] Lateral movement detection complete.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "alert explainability"
+		try:
+			alerts = explain_alerts(alerts)
+			print("[Aegis-SOC] Alert explainability complete.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
