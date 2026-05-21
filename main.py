@@ -1,4 +1,5 @@
 """Main entry point for the Aegis-SOC cybersecurity pipeline."""
+from confidence.confidence_scorer import score_alerts
 from explainability.explainer import explain_alerts
 from anomaly.anomaly_detector import run_anomaly_detection
 from playbooks.response_playbooks import run_playbooks
@@ -118,6 +119,13 @@ def main():
 		try:
 			alerts = explain_alerts(alerts)
 			print("[Aegis-SOC] Alert explainability complete.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
+		current_step = "confidence scoring"
+		try:
+			alerts = score_alerts(alerts)
+			print("[Aegis-SOC] Confidence scoring complete.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
