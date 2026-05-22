@@ -17,12 +17,19 @@ from flask import (
 
 from simulator.alert_simulator import generate_alerts
 from log_parser.auth_log_parser import parse_auth_log_content
+from log_parser.auth_log_parser import parse_auth_log
 from log_parser.web_log_parser import parse_web_log_content
+from log_parser.web_log_parser import parse_web_log
 from log_parser.suricata_parser import parse_suricata_log_content
+from log_parser.suricata_parser import parse_suricata_log
 from engine.rule_engine import process_alerts
+from engine.rule_engine import reclassify_alerts, tag_mitre_alerts
 from enrichment.threat_intel import enrich_alerts
 from correlator.alert_correlator import correlate_alerts
 from anomaly.anomaly_detector import run_anomaly_detection
+from lateral_movement.lateral_detector import detect_lateral_movement
+from explainability.explainer import explain_alerts
+from confidence.confidence_scorer import score_alerts
 from l2_investigator.l2_engine import run_l2_investigation
 from playbooks.response_playbooks import run_playbooks
 from logger.false_positive_logger import log_false_positives
@@ -251,13 +258,25 @@ def run_pipeline():
 		# Use existing JSON-based alert generation
 		data = request.get_json(silent=True) or {}
 		count = int(data.get("count", 5))
-		alerts = generate_alerts(count)
+		simulated_alerts = generate_alerts(count)
+		auth_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_logs", "auth.log")
+		web_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_logs", "access.log")
+		suricata_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_logs", "suricata.json")
+		auth_alerts = parse_auth_log(auth_log_path)
+		web_alerts = parse_web_log(web_log_path)
+		suricata_alerts = parse_suricata_log(suricata_log_path)
+		alerts = simulated_alerts + auth_alerts + web_alerts + suricata_alerts
 	
 	alerts = process_alerts(alerts)
 	alerts = enrich_alerts(alerts)
+	alerts = reclassify_alerts(alerts)
+	alerts = tag_mitre_alerts(alerts)
 	alerts = run_anomaly_detection(alerts)
 
 	correlation_results = correlate_alerts(alerts)
+	alerts = detect_lateral_movement(alerts)
+	alerts = explain_alerts(alerts)
+	alerts = score_alerts(alerts)
 
 	run_l2_investigation(alerts)
 	run_playbooks(alerts)
