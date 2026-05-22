@@ -9,7 +9,7 @@
 
   ```
   SYSTEM     : Automated L1 SOC Triage System
-  VERSION    : 8.0
+  VERSION    : 9.0
   STATUS     : ACTIVE
   CLEARANCE  : OPEN SOURCE
   ```
@@ -20,7 +20,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
 
   ## OVERVIEW
 
-  Aegis-SOC is a modular, open source SOC triage pipeline designed to automate L1 and L2 alert handling end-to-end. The system generates or ingests alerts from multiple sources, applies a rule-based classification engine, and performs dual-source enrichment against AbuseIPDB and VirusTotal. Alerts receive dynamic severity reclassification based on threat intel scores, then flow into an Isolation Forest anomaly detector that uses historical alert patterns to identify unusual activity. Correlated alerts are analyzed for rapid time-window attacks and heuristic-based kill-chain sequences to surface multi-vector campaigns. The platform supports automated email notifications for critical incidents, structured JSON and console report generation, an L2 investigation engine with impact assessment and isolation recommendations, and a library of response playbooks. False positives are automatically logged and tracked through a ticketing workflow, and a secured Flask dashboard with role-based authentication provides operators with controlled access and visualization.
+  Aegis-SOC is a modular, open source SOC triage pipeline designed to automate L1 and L2 alert handling end-to-end. The system generates or ingests alerts from multiple sources, applies a rule-based classification engine, and performs dual-source enrichment against AbuseIPDB and VirusTotal. Alerts receive dynamic severity reclassification based on threat intel scores, then flow into an Isolation Forest anomaly detector that uses historical alert patterns to identify unusual activity. Correlated alerts are analyzed for rapid time-window attacks and heuristic-based kill-chain sequences to surface multi-vector campaigns. The platform supports automated email notifications for critical incidents, structured JSON and console report generation, an L2 investigation engine with impact assessment and isolation recommendations, and a library of response playbooks. False positives are automatically logged and tracked through a ticketing workflow, and a secured Flask dashboard with role-based authentication provides operators with controlled access and visualization. Every alert is accompanied by a plain English explanation of why it was flagged, and a confidence score from 0 to 100 reflecting the weighted strength of detection signals.
 
   ---
   ## DASHBOARD PREVIEW
@@ -55,18 +55,21 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [+]  SQLite Historical Baseline       Persistent alert history for statistically meaningful anomaly detection
   [+]  Dashboard Authentication         Session-based login with environment configured credentials
   [+]  False Positive Ticketing         Auto-creates SQLite tickets with OPEN/IN_PROGRESS/CLOSED workflow
-  [+]  Multi-User Dashboard             Admin and analyst roles with SHA-256 password hashing and user management
+  [+]  Multi-User Dashboard             Admin and analyst roles with bcrypt password hashing and user management
   [+]  Executable Playbook Logging      Every playbook step records SIMULATED status with timestamp and execution summary
-  [+]  68 Automated Unit Tests          68 automated unit tests across core modules
+  [+]  78 Automated Unit Tests          78 automated unit tests across core modules
   [+]  Apache/Nginx Log Parser          Detects brute force, SQL injection, and path reconnaissance from web logs
   [+]  Suricata NIDS Integration         Parses Suricata EVE JSON alerts directly into the pipeline
   [+]  Lateral Movement Detection        Flags attackers escalating across multiple target systems
+  [+]  Alert Explainability         Every alert includes a plain English explanation of why it was flagged
+  [+]  Confidence Scoring           Weighted signal score (0-100) per alert reflecting detection certainty
+  [+]  Port Scan Playbook           Dedicated response playbook for port scan alerts
   ```
 
   ## THREAT PIPELINE
 
   ```
-  [SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [RECLASSIFIER] → [ANOMALY DETECTOR] → [CORRELATOR] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [PLAYBOOKS] → [FP LOGGER]
+  [SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [RECLASSIFIER] → [ANOMALY DETECTOR] → [CORRELATOR] → [EXPLAINABILITY] → [CONFIDENCE SCORER] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [PLAYBOOKS] → [FP LOGGER]
 
   ```
 
@@ -169,6 +172,10 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   │   └── l2_engine.py                  # L2 automated investigation engine
   ├── correlator/
   │   └── alert_correlator.py           # Multi-vector alert correlation
+  ├── explainability/
+  │   └── explainer.py                  # Alert explainability module
+  ├── confidence/
+  │   └── confidence_scorer.py          # Alert confidence scoring module
   ├── integrations/
   │   └── wazuh_ingestor.py             # Wazuh SIEM ingestion layer
   ├── l2_reports/                        # L2 investigation reports
@@ -242,7 +249,7 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   
   ## TESTING
 
-  Run all 68 unit tests with:
+  Run all 78 unit tests with:
   ```bash
   python -m pytest tests/ -v
   ```
@@ -259,7 +266,8 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [COMPLETE]  V6 — MITRE ATT&CK tagging, file hash analysis, Isolation Forest ML, AbuseIPDB categories, smarter simulation
   [COMPLETE]  V7 — Web log parser, Suricata NIDS integration, lateral movement detection, 58 unit tests
   [COMPLETE]  V8 — False positive ticketing, multi-user dashboard, executable playbook logging, 68 unit tests
-  [PLANNED]   V9 — Live SIEM feed, WebSocket dashboard updates, threat hunting module
+  [COMPLETE]  V9 — Alert explainability, confidence scoring, port scan playbook, dashboard chart redesign, 78 unit tests
+  [PLANNED]   V10 — Docker containerization, WebSocket dashboard, live SIEM feed
   ```
 
   ---
