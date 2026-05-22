@@ -65,35 +65,10 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   [+]  Confidence Scoring           Weighted signal score (0-100) per alert reflecting detection certainty
   [+]  Port Scan Playbook           Dedicated response playbook for port scan alerts
   ```
+## PIPELINE ARCHITECTURE
 
-  ## THREAT PIPELINE
-
+![Aegis-SOC Architecture](assets/architecture_diagram.png)
   ```
-  [SIMULATOR/WAZUH] → [RULE ENGINE] → [THREAT INTEL] → [RECLASSIFIER] → [ANOMALY DETECTOR] → [CORRELATOR] → [EXPLAINABILITY] → [CONFIDENCE SCORER] → [NOTIFIER] → [REPORTER] → [L2 ENGINE] → [PLAYBOOKS] → [FP LOGGER]
-
-  ```
-
-  ## PIPELINE ARCHITECTURE
-  ```
-  INPUT LAYER
-    ├── Alert Simulator      →  10 attack vectors, synthetic alerts
-    ├── Wazuh Ingestor       →  SIEM compatible ingestion
-    ├── Auth Log Parser      →  Real Linux auth.log ingestion
-    ├── Web Log Parser       →  Apache/Nginx access log ingestion
-    └── Suricata Parser      →  NIDS EVE JSON alert ingestion
-
-  PROCESSING LAYER
-    ├── Rule Engine          →  Severity classification (LOW/MED/HIGH/CRIT)
-    ├── Threat Intel         →  AbuseIPDB + VirusTotal enrichment
-    ├── Anomaly Detector     →  Isolation Forest ML anomaly detection
-    └── Alert Correlator     →  Multi-vector attack grouping
-
-  OUTPUT LAYER
-    ├── Email Notifier       →  CRITICAL alert dispatch
-    ├── Report Generator     →  JSON + Console incident reports
-    ├── L2 Investigator      →  Impact assessment + isolation rec.
-    ├── Response Playbooks   →  Step-by-step incident response
-    └── FP Logger            →  False positive registry
 
   ```
   | Stage | Module | Function |
@@ -237,9 +212,9 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   ```bash
   python -m dashboard.app
   ```
-  ```Then open``` http://localhost:5000 ```in your browser.```
+Then open http://localhost:5000 in your browser.
 
-  ```To logout: click the Logout button in the sidebar or visit``` http://localhost:5000/logout ```in your browser```
+To logout: click the Logout button in the sidebar or visit http://localhost:5000/logout in your browser.
 
   ---
 
