@@ -30,6 +30,7 @@
             background: #080c14;
             color: var(--text-primary);
             font-family: "Consolas", "Segoe UI", sans-serif;
+            overflow-x: hidden;
         }
 
         .layout {
@@ -173,6 +174,8 @@
             width: calc(100% - 250px);
             padding: 20px;
             background: #0d1117;
+            overflow-x: hidden;
+            min-width: 0;
         }
 
         .topbar {
@@ -310,8 +313,10 @@
         .metric-grid {
             margin-top: 14px;
             display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
+            flex-wrap: wrap;
+            min-width: 0;
         }
 
         .metric-card {
@@ -353,9 +358,72 @@
 
         .charts-row {
             margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .charts-row .panel {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .severity-layout {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .severity-chart-half,
+        .severity-stats-half {
+            width: 50%;
+            min-width: 0;
+        }
+
+        .severity-stats-half {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
+        }
+
+        .severity-stat-box {
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .severity-stat-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .severity-stat-number {
+            margin-top: 8px;
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #e5e7eb;
+        }
+
+        #stat-critical {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        #stat-high {
+            background: rgba(249, 115, 22, 0.08);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        #stat-medium {
+            background: rgba(250, 204, 21, 0.08);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+
+        #stat-low {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.3);
         }
 
         .panel {
@@ -642,39 +710,49 @@
                     <div class="metric-top"><span>Total Alerts</span><span class="trend-icon">▲</span></div>
                     <div class="metric-value" id="totalAlerts">0</div>
                 </div>
-                <div class="metric-card accent-critical">
-                    <div class="metric-top"><span>Critical</span><span class="trend-icon">▲</span></div>
-                    <div class="metric-value" id="criticalCount">0</div>
-                </div>
-                <div class="metric-card accent-high">
-                    <div class="metric-top"><span>High</span><span class="trend-icon">▲</span></div>
-                    <div class="metric-value" id="highCount">0</div>
-                </div>
-                <div class="metric-card accent-medium">
-                    <div class="metric-top"><span>Medium</span><span class="trend-icon">▲</span></div>
-                    <div class="metric-value" id="mediumCount">0</div>
-                </div>
-                <div class="metric-card accent-low">
-                    <div class="metric-top"><span>Low</span><span class="trend-icon">▲</span></div>
-                    <div class="metric-value" id="lowCount">0</div>
-                </div>
                 <div class="metric-card accent-confirmed">
                     <div class="metric-top"><span>Threat Confirmed</span><span class="trend-icon">▲</span></div>
                     <div class="metric-value" id="confirmedCount">0</div>
+                </div>
+                <div style="display: none;">
+                    <span id="criticalCount">0</span>
+                    <span id="highCount">0</span>
+                    <span id="mediumCount">0</span>
+                    <span id="lowCount">0</span>
                 </div>
             </section>
 
             <section class="charts-row" id="section-charts">
                 <div class="panel">
                     <h2 class="panel-title">Severity Distribution</h2>
-                    <div style="position: relative; height: 280px;">
-                        <canvas id="severityDonutChart"></canvas>
+                    <div class="severity-layout">
+                        <div class="severity-chart-half" style="position: relative; height: 280px;">
+                            <canvas id="severityDonutChart" style="height: 280px;"></canvas>
+                        </div>
+                        <div class="severity-stats-half">
+                            <div class="severity-stat-box" id="stat-critical">
+                                <div class="severity-stat-label" style="color: #ef4444;">CRITICAL</div>
+                                <div class="severity-stat-number">0</div>
+                            </div>
+                            <div class="severity-stat-box" id="stat-high">
+                                <div class="severity-stat-label" style="color: #f97316;">HIGH</div>
+                                <div class="severity-stat-number">0</div>
+                            </div>
+                            <div class="severity-stat-box" id="stat-medium">
+                                <div class="severity-stat-label" style="color: #facc15;">MEDIUM</div>
+                                <div class="severity-stat-number">0</div>
+                            </div>
+                            <div class="severity-stat-box" id="stat-low">
+                                <div class="severity-stat-label" style="color: #22c55e;">LOW</div>
+                                <div class="severity-stat-number">0</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="panel">
                     <h2 class="panel-title">Alert Types</h2>
-                    <div style="position: relative; height: 280px;">
-                        <canvas id="alertTypesBarChart"></canvas>
+                    <div style="position: relative; height: 220px;">
+                        <canvas id="alertTypesBarChart" style="height: 220px; width: 100%;"></canvas>
                     </div>
                 </div>
             </section>
@@ -858,6 +936,11 @@
             document.getElementById("mediumCount").textContent = summary.medium_count || 0;
             document.getElementById("lowCount").textContent = summary.low_count || 0;
             document.getElementById("confirmedCount").textContent = summary.threat_confirmed_count || 0;
+
+            document.getElementById("stat-critical").querySelector(".severity-stat-number").textContent = summary.critical_count || 0;
+            document.getElementById("stat-high").querySelector(".severity-stat-number").textContent = summary.high_count || 0;
+            document.getElementById("stat-medium").querySelector(".severity-stat-number").textContent = summary.medium_count || 0;
+            document.getElementById("stat-low").querySelector(".severity-stat-number").textContent = summary.low_count || 0;
         }
 
         function renderSeverityChart(summary) {
