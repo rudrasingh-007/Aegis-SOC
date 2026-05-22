@@ -1,4 +1,11 @@
 # Changelog
+## [V9.0]
+- Added alert explainability module — every alert now carries a plain English explanation of why it was flagged and escalated
+- Added confidence scoring — each alert receives a weighted signal score (0-100) reflecting detection certainty
+- Added port_scan dedicated playbook — replaces generic fallback for port scan alerts
+- Redesigned dashboard charts — severity donut and alert type bar chart now stacked vertically with color-coded severity stat panel
+- Expanded unit tests from 68 to 78 across all core modules
+
 ## [V8.0]
 - Added false positive ticketing system — auto-creates SQLite tickets for every false positive with OPEN/IN_PROGRESS/CLOSED workflow
 - Added multi-user dashboard with role-based access — admin and analyst roles, SHA-256 password hashing, user management UI
