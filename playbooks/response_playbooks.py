@@ -77,6 +77,18 @@ PLAYBOOKS = {
 			"6. Monitor closely for further brute force attempts.",
 		],
 	},
+	"port_scan": {
+		"name": "Port Scan Detection and Blocking",
+		"description": "Identify scanning activity, block the source, and harden exposed services.",
+		"steps": [
+			"1. Identify the scanning source and confirm malicious intent.",
+			"2. Block the source IP at the perimeter firewall immediately.",
+			"3. Review exposed ports and close any unnecessary services.",
+			"4. Check for follow-up attacks such as brute force or exploitation attempts.",
+			"5. Add the source IP to the threat intelligence blocklist.",
+			"6. Increase monitoring on affected network segments.",
+		],
+	},
 }
 
 
