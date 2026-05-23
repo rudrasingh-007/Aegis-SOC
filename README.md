@@ -86,11 +86,12 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
 ## EXAMPLE INVESTIGATION
 
 > **Scenario:** Brute force attack detected via Linux auth.log ingestion
-
 **Input — Raw Log (sample_logs/auth.log)**
+```
 May  2 04:17:32 secserver sshd[12847]: Invalid user root from 185.220.101.14 port 52184
 May  2 04:17:33 secserver sshd[12848]: Failed password for invalid user root from 185.220.101.14 port 52185 ssh2
 ... (15 attempts total in 70 seconds)
+```
 
 **Pipeline Execution**
 
