@@ -9,6 +9,7 @@ SYSTEM_CRITICALITY = {
 	"domain_controller": 5,
 	"database": 4,
 	"firewall": 3,
+	"ssh_server": 2,
 	"web_server": 2,
 	"employee_workstation": 1,
 }
@@ -17,6 +18,7 @@ ISOLATION_RECOMMENDATIONS = {
 	"domain_controller": "ISOLATE IMMEDIATELY - Domain controller compromise affects entire network",
 	"database": "ISOLATE AND PRESERVE EVIDENCE - Potential data breach or ransomware payload",
 	"firewall": "ISOLATE AND REPLACE - Perimeter defense compromised",
+	"ssh_server": "ISOLATE AND AUDIT - SSH access point compromised",
 	"web_server": "ISOLATE AND PATCH - Public facing service compromised",
 	"employee_workstation": "INVESTIGATE BEFORE ISOLATING - Potential lateral movement entry point",
 }
