@@ -77,6 +77,18 @@ PLAYBOOKS = {
 			"6. Monitor closely for further brute force attempts.",
 		],
 	},
+	"failed_login": {
+		"name": "Failed Login Investigation",
+		"description": "Investigate repeated failed login attempts and prevent unauthorized access.",
+		"steps": [
+			"1. Identify the source IP and check its threat intelligence reputation.",
+			"2. Review authentication logs for the full scope of failed attempts.",
+			"3. Determine if the target account has been compromised.",
+			"4. Temporarily block the source IP at the firewall if attempts are ongoing.",
+			"5. Reset credentials for any targeted accounts as a precaution.",
+			"6. Monitor for escalation to brute force or privilege escalation activity.",
+		],
+	},
 	"port_scan": {
 		"name": "Port Scan Detection and Blocking",
 		"description": "Identify scanning activity, block the source, and harden exposed services.",
@@ -150,6 +162,7 @@ def execute_playbook(alert):
 	with open(output_path, "w", encoding="utf-8") as output_file:
 		json.dump(execution, output_file, indent=2)
 
+	print()
 	print("=" * 60)
 	print("Aegis-SOC Response Playbook")
 	print("=" * 60)
@@ -163,6 +176,7 @@ def execute_playbook(alert):
 		print(f"  [{step_result['status']}] {step_result['step']}")
 	print(f"Execution Saved To: {output_path}")
 	print("=" * 60)
+	print()
 
 	return playbook
 

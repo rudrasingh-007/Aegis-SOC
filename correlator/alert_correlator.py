@@ -184,7 +184,9 @@ def correlate_alerts(alerts):
 		print("=" * 60)
 		print("Aegis-SOC Correlated Incidents")
 		print("=" * 60)
-		for incident in correlated_incidents:
+		for index, incident in enumerate(correlated_incidents):
+			if index > 0:
+				print()
 			print(f"Source IP: {incident['source_ip']}")
 			print(f"Total Alerts: {incident['total_alerts']}")
 			print(f"Highest Severity: {incident['highest_severity']}")

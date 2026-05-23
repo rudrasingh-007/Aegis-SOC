@@ -98,6 +98,7 @@ def investigate(alert):
 	with open(output_path, "w", encoding="utf-8") as output_file:
 		json.dump(report, output_file, indent=2)
 
+	print()
 	print("=" * 60)
 	print("Aegis-SOC L2 Investigation Summary")
 	print("=" * 60)
@@ -114,6 +115,7 @@ def investigate(alert):
 			print(f"  - {key}: {value}")
 	print(f"Report Saved To: {output_path}")
 	print("=" * 60)
+	print()
 
 	return report
 

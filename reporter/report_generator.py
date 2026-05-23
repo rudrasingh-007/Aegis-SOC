@@ -28,9 +28,10 @@ def generate_report(alert):
 		"recommended_action": get_recommended_action(alert.get("severity", "")),
 	}
 
-	print("=" * 50)
+	print()
+	print("=" * 60)
 	print("Aegis-SOC Alert Report")
-	print("=" * 50)
+	print("=" * 60)
 	print(f"Alert ID: {alert.get('alert_id', 'N/A')}")
 	print(f"Timestamp: {alert.get('timestamp', 'N/A')}")
 	print(f"Source IP: {alert.get('source_ip', 'N/A')}")
@@ -47,7 +48,8 @@ def generate_report(alert):
 	if "threat_confirmed" in alert:
 		print(f"Threat Confirmed: {alert.get('threat_confirmed')}")
 	print(f"Recommended Action: {report['recommended_action']}")
-	print("=" * 50)
+	print("=" * 60)
+	print()
 
 	alert_id = alert.get("alert_id", f"alert-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}")
 	report_path = os.path.join(REPORTS_OUTPUT_FOLDER, f"{alert_id}.json")
