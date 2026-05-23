@@ -344,6 +344,15 @@ def close_ticket_route():
 	return jsonify({"success": False})
 
 
+@app.route("/tickets/clear", methods=["POST"])
+def clear_tickets():
+	if session.get('logged_in') is not True or session.get('role') != 'admin':
+		return jsonify({'error': 'Unauthorized'}), 401
+	from ticketing.ticket_manager import clear_all_tickets
+	clear_all_tickets()
+	return jsonify({"success": True})
+
+
 @app.route("/users", methods=["GET"])
 def users():
 	"""Return all users as JSON for admin users."""

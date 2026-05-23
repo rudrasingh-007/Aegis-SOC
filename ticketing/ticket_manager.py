@@ -152,4 +152,12 @@ def update_ticket_status(ticket_id, status, notes):
 		return False
 
 
+def clear_all_tickets():
+	conn = get_connection()
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM fp_tickets")
+	conn.commit()
+	conn.close()
+
+
 init_tickets_db()
