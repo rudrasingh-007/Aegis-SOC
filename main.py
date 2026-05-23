@@ -10,6 +10,7 @@ from l2_investigator.l2_engine import run_l2_investigation
 from logger.false_positive_logger import log_false_positives
 from notifier.email_notifier import notify_critical_alerts
 from simulator.alert_simulator import generate_alerts
+from log_parser.auth_log_parser import parse_auth_log
 from log_parser.web_log_parser import parse_web_log
 from log_parser.suricata_parser import parse_suricata_log
 from engine.rule_engine import process_alerts, reclassify_alerts, tag_mitre_alerts
@@ -21,6 +22,7 @@ def main():
 	"""Run the end-to-end Aegis-SOC alert processing pipeline."""
 	alerts = []
 	wazuh_alerts = []
+	auth_alerts = []
 	web_log_alerts = []
 	suricata_alerts = []
 	current_step = "pipeline initialization"
@@ -51,6 +53,13 @@ def main():
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
 
+		current_step = "load auth log alerts"
+		try:
+			auth_alerts = parse_auth_log("sample_logs/auth.log")
+			print(f"[Aegis-SOC] Loaded {len(auth_alerts)} auth log alerts into pipeline.")
+		except Exception as error:
+			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
+
 		current_step = "load suricata alerts"
 		try:
 			suricata_alerts = parse_suricata_log("sample_logs/suricata.json")
@@ -61,7 +70,7 @@ def main():
 		current_step = "generate alerts"
 		try:
 			alerts = generate_alerts(5)
-			alerts = alerts + wazuh_alerts + web_log_alerts + suricata_alerts
+			alerts = alerts + wazuh_alerts + web_log_alerts + suricata_alerts + auth_alerts
 			print("[Aegis-SOC] Alerts have been generated.")
 		except Exception as error:
 			print(f"[Aegis-SOC][WARNING] Step failed: {current_step} | Error: {error}")
