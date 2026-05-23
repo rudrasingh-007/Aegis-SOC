@@ -83,6 +83,55 @@ It simulates and automates core aspects of L1 and L2 SOC triage — from alert i
   | 07 | L2 Investigation Engine | Deep automated analysis for CRITICAL alerts |
   | 08 | FP Logger | Maintains persistent false positive registry |
 
+## EXAMPLE INVESTIGATION
+
+> **Scenario:** Brute force attack detected via Linux auth.log ingestion
+
+**Input — Raw Log (sample_logs/auth.log)**
+May  2 04:17:32 secserver sshd[12847]: Invalid user root from 185.220.101.14 port 52184
+May  2 04:17:33 secserver sshd[12848]: Failed password for invalid user root from 185.220.101.14 port 52185 ssh2
+... (15 attempts total in 70 seconds)
+
+**Pipeline Execution**
+
+| Stage | Action | Result |
+|---|---|---|
+| Auth Log Parser | Groups 15 failed SSH attempts from same IP | brute_force alert generated |
+| Rule Engine | Matches brute_force rule | Severity -> CRITICAL |
+| Threat Intel | Queries AbuseIPDB + VirusTotal | abuse_score: 100, virustotal_score: 11 |
+| Reclassification | abuse_score > 90 | Severity confirmed CRITICAL |
+| MITRE Tagging | Maps brute_force | T1110 - Brute Force, Credential Access |
+| Anomaly Detector | Isolation Forest ML flags unusual attempt_count and IP frequency | is_anomaly: True |
+| Confidence Scorer | threat_confirmed + is_anomaly + abuse_score > 75 signals | confidence_score: 55 |
+| L2 Investigator | CRITICAL alert triggers deep investigation | Isolation recommended |
+| Response Playbooks | brute_force playbook triggered | Step-by-step response executed |
+
+**Output — Generated Alert**
+```json
+{
+  "alert_id": "AUTHLOG-299225",
+  "source_ip": "185.220.101.14",
+  "alert_type": "brute_force",
+  "severity": "CRITICAL",
+  "abuse_score": 100,
+  "virustotal_score": 11,
+  "threat_confirmed": true,
+  "mitre_tactic": "Credential Access",
+  "mitre_technique_id": "T1110",
+  "is_anomaly": true,
+  "confidence_score": 55,
+  "explanation": [
+    "Alert type: brute_force",
+    "MITRE: Credential Access — T1110",
+    "AbuseIPDB score: 100, VirusTotal score: 11 — threat confirmed",
+    "Flagged as anomaly by ML detector (score: -0.0219)"
+  ],
+  "recommended_action": "Immediate escalation to L2. Isolate affected system."
+}
+```
+
+**Verdict:** Real malicious IP confirmed by two independent threat intel sources. ML anomaly detection flagged unusual activity. Automated L2 investigation and brute force playbook triggered immediately.
+
   ---
 
   ## SEVERITY MATRIX
