@@ -1535,6 +1535,7 @@
                 renderAlertsTable();
                 renderCorrelatedIncidents();
                 setAllStagesDone();
+                loadTickets();
             } catch (error) {
                 console.error(error);
                 alert("Pipeline execution failed. Please check server logs and retry.");
