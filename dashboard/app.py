@@ -258,14 +258,23 @@ def run_pipeline():
 		# Use existing JSON-based alert generation
 		data = request.get_json(silent=True) or {}
 		count = int(data.get("count", 5))
-		simulated_alerts = generate_alerts(count)
 		auth_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_logs", "auth.log")
 		web_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_logs", "access.log")
 		suricata_log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_logs", "suricata.json")
-		auth_alerts = parse_auth_log(auth_log_path)
-		web_alerts = parse_web_log(web_log_path)
-		suricata_alerts = parse_suricata_log(suricata_log_path)
-		alerts = simulated_alerts + auth_alerts + web_alerts + suricata_alerts
+		use_simulator = bool(data.get("use_simulator", True))
+		use_auth_log = bool(data.get("use_auth_log", True))
+		use_web_log = bool(data.get("use_web_log", True))
+		use_suricata = bool(data.get("use_suricata", True))
+
+		alerts = []
+		if use_simulator:
+			alerts.extend(generate_alerts(count))
+		if use_auth_log:
+			alerts.extend(parse_auth_log(auth_log_path))
+		if use_web_log:
+			alerts.extend(parse_web_log(web_log_path))
+		if use_suricata:
+			alerts.extend(parse_suricata_log(suricata_log_path))
 	
 	alerts = process_alerts(alerts)
 	alerts = enrich_alerts(alerts)

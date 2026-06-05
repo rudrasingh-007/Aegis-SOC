@@ -190,6 +190,67 @@
             border-bottom: 1px solid #1f2937;
         }
 
+        .source-row {
+            margin-top: 12px;
+            background: #0d1117;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            color: #9ca3af;
+        }
+
+        .source-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .source-options {
+            display: flex;
+            align-items: center;
+            gap: 14px 18px;
+            flex-wrap: wrap;
+        }
+
+        .source-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            color: #9ca3af;
+            user-select: none;
+        }
+
+        .source-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: #3b82f6;
+        }
+
+        .source-count-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 10px;
+            border-left: 1px solid #1f2937;
+        }
+
+        .source-count-group.is-hidden {
+            display: none;
+        }
+
+        .source-count-group .muted {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
         .topbar h1 {
             margin: 0;
             font-size: 1.6rem;
@@ -682,12 +743,6 @@
             <header class="topbar">
                 <h1>SOC Dashboard</h1>
                 <div class="controls">
-                    <label for="alertCount" class="muted" style="font-size: 0.8rem;">Alert Count</label>
-                    <select id="alertCount" class="selector">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="20">20</option>
-                    </select>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
                             <input type="file" id="logFileInput" accept=".log" class="file-input-hidden" />
@@ -704,6 +759,36 @@
                     </div>
                 </div>
             </header>
+
+            <div class="source-row">
+                <span class="source-label">Sources:</span>
+                <div class="source-options">
+                    <label class="source-option" for="sourceSimulator">
+                        <input type="checkbox" id="sourceSimulator" checked />
+                        <span>Simulator</span>
+                    </label>
+                    <label class="source-option" for="sourceAuthLog">
+                        <input type="checkbox" id="sourceAuthLog" checked />
+                        <span>Auth Log</span>
+                    </label>
+                    <label class="source-option" for="sourceWebLog">
+                        <input type="checkbox" id="sourceWebLog" checked />
+                        <span>Web Log</span>
+                    </label>
+                    <label class="source-option" for="sourceSuricata">
+                        <input type="checkbox" id="sourceSuricata" checked />
+                        <span>Suricata</span>
+                    </label>
+                </div>
+                <div id="alertCountGroup" class="source-count-group">
+                    <label for="alertCount" class="muted">Alert Count</label>
+                    <select id="alertCount" class="selector">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+            </div>
 
             <section class="metric-grid" id="section-dashboard">
                 <div class="metric-card">
@@ -874,6 +959,11 @@
         const runPipelineBtn = document.getElementById("runPipelineBtn");
         const clearDashboardBtn = document.getElementById("clearDashboardBtn");
         const loadingIndicator = document.getElementById("loadingIndicator");
+        const sourceSimulatorCheckbox = document.getElementById("sourceSimulator");
+        const sourceAuthLogCheckbox = document.getElementById("sourceAuthLog");
+        const sourceWebLogCheckbox = document.getElementById("sourceWebLog");
+        const sourceSuricataCheckbox = document.getElementById("sourceSuricata");
+        const alertCountGroup = document.getElementById("alertCountGroup");
         const alertCountSelector = document.getElementById("alertCount");
         const logFileInput = document.getElementById("logFileInput");
         const uploadBtn = document.getElementById("uploadBtn");
@@ -896,14 +986,27 @@
         let severityChart = null;
         let alertTypesChart = null;
 
+        function updateAlertCountVisibility() {
+            const simulatorEnabled = sourceSimulatorCheckbox.checked;
+            alertCountGroup.classList.toggle("is-hidden", !simulatorEnabled);
+            alertCountSelector.disabled = !simulatorEnabled || loadingIndicator.classList.contains("show");
+        }
+
         function setLoading(isLoading) {
             runPipelineBtn.disabled = isLoading;
             clearDashboardBtn.disabled = isLoading;
-            alertCountSelector.disabled = isLoading;
+            sourceSimulatorCheckbox.disabled = isLoading;
+            sourceAuthLogCheckbox.disabled = isLoading;
+            sourceWebLogCheckbox.disabled = isLoading;
+            sourceSuricataCheckbox.disabled = isLoading;
+            updateAlertCountVisibility();
             if (logFileInput) logFileInput.disabled = isLoading;
             if (uploadBtn) uploadBtn.disabled = isLoading;
             loadingIndicator.classList.toggle("show", isLoading);
         }
+
+        sourceSimulatorCheckbox.addEventListener("change", updateAlertCountVisibility);
+        updateAlertCountVisibility();
 
         function initializePipelineStatus() {
             const container = document.getElementById("pipelineStatusList");
@@ -1397,10 +1500,20 @@
                 } else {
                     // Send as JSON
                     const selectedCount = Number(alertCountSelector.value || 10);
+                    const useSimulator = sourceSimulatorCheckbox.checked;
+                    const useAuthLog = sourceAuthLogCheckbox.checked;
+                    const useWebLog = sourceWebLogCheckbox.checked;
+                    const useSuricata = sourceSuricataCheckbox.checked;
                     response = await fetch("/run-pipeline", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ count: selectedCount }),
+                        body: JSON.stringify({
+                            count: selectedCount,
+                            use_simulator: useSimulator,
+                            use_auth_log: useAuthLog,
+                            use_web_log: useWebLog,
+                            use_suricata: useSuricata,
+                        }),
                     });
                 }
 
